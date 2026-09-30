@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: clinica
+
+  ## Local Server configuration
+  mvc:
+    locale-resolver: fixed
+    locale: pt_BR
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  ## JPA configuration
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+
+## API Endpoint configuration
+app:
+  base-url: http://localhost:8080
+  api:
+    endpoints:
+      users: /api/v1/users
