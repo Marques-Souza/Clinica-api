@@ -12,7 +12,7 @@ public interface UserMapper {
 
     User toUser(UserRequestDto dto);
 
-    @Mapping(target = "role", source = "user.perfil")
+    @Mapping(target = "perfil", source = "user.perfil")
     @Mapping(target = "url", source = "url")
     UserResponseDto toDto(User user, String url);
 }
