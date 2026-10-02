@@ -3,6 +3,10 @@ package com.marquesdev.clinica.entity;
 import com.marquesdev.clinica.enums.Perfil;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -13,6 +17,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Entity
 @Table(name = "users")
+@EntityListeners(AuditingEntityListener.class)
 public class User {
 
     @Id
@@ -31,15 +36,19 @@ public class User {
     @Column(name = "perfil", nullable = false, length = 25)
     private Perfil perfil;
 
+    @CreatedDate
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @LastModifiedBy
     @Column(name = "modified_at")
     private LocalDateTime modifiedAt;
 
+    @CreatedBy
     @Column(name = "created_by")
     private String createdBy;
 
+    @LastModifiedBy
     @Column(name = "modified_by")
     private String modifiedBy;
 
