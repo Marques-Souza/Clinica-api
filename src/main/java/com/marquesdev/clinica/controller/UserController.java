@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -57,6 +58,7 @@ public class UserController {
 
     )
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN') OR ((hasAuthority('USER') OR hasAuthority('DOCTOR')) AND #id == authentication.principal.id)")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable UUID id){
         UserResponseDto user = userService.getUserById(id);
         return ResponseEntity.ok(user);
@@ -93,6 +95,7 @@ public class UserController {
 
     )
     @PatchMapping("/{id}/password")
+    @PreAuthorize("@userAuthorization.canUpdatePassword(#id, authentication)")
     public ResponseEntity<UserResponseDto> updatePassword(@PathVariable UUID id,@Valid @RequestBody PasswordRequestDto passwordRequestDto){
         UserResponseDto updatedPassword = userService.updatePassword(id, passwordRequestDto);
         return ResponseEntity.ok(updatedPassword);
