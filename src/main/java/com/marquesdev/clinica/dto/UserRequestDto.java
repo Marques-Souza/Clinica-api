@@ -12,9 +12,6 @@ public record UserRequestDto(
 
         @NotBlank(message = "Password cannot be blank.")
         @Size(min = 5, max = 12, message = "Password must be between 5 and 12 characters.")
-        String password,
-
-        @NotBlank(message = "Perfil cannot be blank.")
-        String perfil
+        String password
 ) {
 }

@@ -14,7 +14,6 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @Entity
 @Table(name = "users")
@@ -52,6 +51,18 @@ public class User {
     @LastModifiedBy
     @Column(name = "modified_by")
     private String modifiedBy;
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setPerfil(Perfil perfil) {
+        this.perfil = perfil;
+    }
 
     @Override
     public boolean equals(Object o) {
