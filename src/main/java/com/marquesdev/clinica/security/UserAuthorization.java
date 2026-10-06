@@ -37,7 +37,7 @@ public class UserAuthorization {
 
             return userRepository.findById(id)
                     .map(user -> user.getPerfil() == Perfil.DOCTOR)
-                    .orElse(false);
+                    .orElse(true);
         }
         return  false;
     }
