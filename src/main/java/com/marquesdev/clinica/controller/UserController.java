@@ -10,8 +10,10 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.websocket.Endpoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,10 +50,13 @@ public class UserController {
 
 
     @Operation(summary = "Retrieve a user by ID",
-            description = "Retrieve a user by ID in the database",
+            description = "Endpoint to get a user by ID (Bearer Token required)",
+            security = @SecurityRequirement(name = "security"),
             responses = {
-                    @ApiResponse(responseCode = "201", description = "User retrieved successfully",
+                    @ApiResponse(responseCode = "200", description = "User retrieved successfully",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDto.class))),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
                     @ApiResponse(responseCode = "409", description = "User not found",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class)))
             }
@@ -66,10 +71,13 @@ public class UserController {
 
 
     @Operation(summary = "Retrieve all users",
-            description = "Retrieve all users in the database",
+            description = "Endpoint to list all users accessible by admin (Bearer Token required)",
+            security = @SecurityRequirement(name = "security"),
             responses = {
-                    @ApiResponse(responseCode = "201", description = "Users retrieved successfully",
-                            content = @Content(mediaType = "application/json",array = @ArraySchema(schema = @Schema(implementation = UserResponseDto.class))))
+                    @ApiResponse(responseCode = "202", description = "Users retrieved successfully",
+                            content = @Content(mediaType = "application/json",array = @ArraySchema(schema = @Schema(implementation = UserResponseDto.class)))),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class)))
             }
 
     )
@@ -80,12 +88,15 @@ public class UserController {
     }
 
 
-    @Operation(summary = "Upadte password",
-            description = "Update user password in the database",
+    @Operation(summary = "Update password",
+            description = "Update user password. Users can update their own password, while Doctors and Admins can only be updated by an Admin. (Bearer Token required)",
+            security = @SecurityRequirement(name = "security"),
             responses = {
-                    @ApiResponse(responseCode = "201", description = "Password updated successfully",
+                    @ApiResponse(responseCode = "200", description = "Password updated successfully",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDto.class))),
                     @ApiResponse(responseCode = "400", description = "Password does not match",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
                     @ApiResponse(responseCode = "404", description = "User not found",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
