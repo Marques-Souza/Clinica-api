@@ -49,8 +49,6 @@ public class Client {
     @Column(nullable = false, length = 10)
     private String number;
 
-
-
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
@@ -65,6 +63,34 @@ public class Client {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public void setStreet(String street) {
+        this.street = street;
+    }
+
+    public void setNeighborhood(String neighborhood) {
+        this.neighborhood = neighborhood;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public void assignUser(User user) {
+        this.user = user;
+    }
+
+    public void setCep(String cep) {
+        this.cep = cep;
+    }
+
+    public void setNumber(String number) {
+        this.number = number;
     }
 
     @Override

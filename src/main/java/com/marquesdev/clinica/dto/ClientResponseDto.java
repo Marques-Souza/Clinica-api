@@ -7,6 +7,7 @@ public record ClientResponseDto(
         String fullName,
         String cpf,
         String phone,
+        String email,
         String cep,
         String street,
         String neighborhood,
