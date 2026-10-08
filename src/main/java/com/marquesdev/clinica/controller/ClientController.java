@@ -2,6 +2,7 @@ package com.marquesdev.clinica.controller;
 
 import com.marquesdev.clinica.dto.ClientRequestDto;
 import com.marquesdev.clinica.dto.ClientResponseDto;
+import com.marquesdev.clinica.dto.ClientUpdateRequestDto;
 import com.marquesdev.clinica.service.ClientService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ public class ClientController {
     @PutMapping("/me")
     public ResponseEntity<ClientResponseDto> createClient(
             @Valid @RequestBody ClientRequestDto clientRequestDto,
-            Authentication authentication){
+            Authentication authentication) {
         String email = authentication.getName();
 
         ClientResponseDto client = clientService.createClient(
@@ -28,14 +29,26 @@ public class ClientController {
         return ResponseEntity.ok(client);
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<ClientResponseDto> getMyClients(
-            Authentication authentication){
+    @PatchMapping("/me")
+    public ResponseEntity<ClientResponseDto> updateClient(
+            @Valid @RequestBody ClientUpdateRequestDto clientUpdateRequestDto,
+            Authentication authentication) {
         String email = authentication.getName();
-        ClientResponseDto client = clientService.getMyClients(email);
+
+        ClientResponseDto client = clientService.updateClient(
+                email, clientUpdateRequestDto
+        );
         return ResponseEntity.ok(client);
     }
 
+
+    @GetMapping("/me")
+    public ResponseEntity<ClientResponseDto> getMyClient(
+            Authentication authentication) {
+        String email = authentication.getName();
+        ClientResponseDto client = clientService.getMyClient(email);
+        return ResponseEntity.ok(client);
+    }
 
 
 }

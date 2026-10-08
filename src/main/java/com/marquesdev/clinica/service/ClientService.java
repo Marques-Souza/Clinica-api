@@ -2,6 +2,7 @@ package com.marquesdev.clinica.service;
 
 import com.marquesdev.clinica.dto.ClientRequestDto;
 import com.marquesdev.clinica.dto.ClientResponseDto;
+import com.marquesdev.clinica.dto.ClientUpdateRequestDto;
 import com.marquesdev.clinica.entity.Client;
 import com.marquesdev.clinica.entity.User;
 import com.marquesdev.clinica.exception.EntityNotFoundException;
@@ -37,10 +38,27 @@ public class ClientService {
     }
 
 
-    public ClientResponseDto getMyClients(String email){
+    public ClientResponseDto getMyClient(String email) {
         Client client = clientRepository.findByUserEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("Client not found"));
         return clientMapper.toDto(client);
+    }
+
+
+    public ClientResponseDto updateClient(
+            String email,
+            ClientUpdateRequestDto clientUpdateRequestDto
+    ) {
+        Client client = clientRepository.findByUserEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Client not found"));
+        clientMapper.updateClient(clientUpdateRequestDto, client);
+
+        if (clientUpdateRequestDto.cep() != null) {
+            ViaCepResponseDto address = viaCepService.findAddressByCep(clientUpdateRequestDto.cep());
+            updateAddress(client, address);
+        }
+        Client updatedClient = clientRepository.save(client);
+        return clientMapper.toDto(updatedClient);
     }
 
     private void updateAddress(
