@@ -12,3 +12,4 @@ app:
   api:
     endpoints:
       users: /api/v1/users
+      clients: /api/v1/clients

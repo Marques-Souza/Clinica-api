@@ -41,6 +41,7 @@ public class UserIT {
 
 
     private final String ADMIN_PERFIL = "ADMIN";
+    private final String USER_PERFIL = "USER";
 
     // Test credentials constants
     private final String ADMIN_USER = "support@gmail.com";
@@ -51,17 +52,17 @@ public class UserIT {
     private final String DOCTOR_PASS = "123456";
 
 
-      // ===========================================
-     // TEST BLOCK: POST /api/v1/users (Create User)
+    // ===========================================
+    // TEST BLOCK: POST /api/v1/users (Create User)
     // =============================================
 
     @Test
-    public void createUser_WithValidCredentials_ReturnsCreatedUserWithStatus201(){
+    public void createUser_WithValidCredentials_ReturnsCreatedUserWithStatus201() {
         UserResponseDto responseBody = testClient
                 .post()
                 .uri(USERS_URI)
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(new UserRequestDto("cleber@gmail.com","123456", ADMIN_PERFIL))
+                .bodyValue(new UserRequestDto("cleber@gmail.com", "123456"))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody(UserResponseDto.class)
@@ -69,16 +70,17 @@ public class UserIT {
         org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
         org.assertj.core.api.Assertions.assertThat(responseBody.id()).isNotNull();
         org.assertj.core.api.Assertions.assertThat(responseBody.email()).isEqualTo("cleber@gmail.com");
-        org.assertj.core.api.Assertions.assertThat(responseBody.perfil()).isEqualTo(ADMIN_PERFIL);
+        org.assertj.core.api.Assertions.assertThat(responseBody.perfil()).isEqualTo(USER_PERFIL);
 
     }
+
     @Test
-    public void createUser_WithDuplicateUsername_ReturnsStatus409(){
+    public void createUser_WithDuplicateUsername_ReturnsStatus409() {
         ErrorMessage responseBody = testClient
                 .post()
                 .uri(USERS_URI)
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(new UserRequestDto(ADMIN_USER, "123456", ADMIN_PERFIL))
+                .bodyValue(new UserRequestDto(ADMIN_USER, "123456"))
                 .exchange()
                 .expectStatus().isEqualTo(409)
                 .expectBody(ErrorMessage.class)
@@ -88,12 +90,12 @@ public class UserIT {
     }
 
     @Test
-    public void createUser_WithInvalidData_ReturnsStatus422(){
+    public void createUser_WithInvalidData_ReturnsStatus422() {
         ErrorMessage responseBody = testClient
                 .post()
                 .uri(USERS_URI)
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(new UserRequestDto("", "", ""))
+                .bodyValue(new UserRequestDto("", ""))
                 .exchange()
                 .expectStatus().isEqualTo(422)
                 .expectBody(ErrorMessage.class)
@@ -102,12 +104,12 @@ public class UserIT {
         org.assertj.core.api.Assertions.assertThat(responseBody.getStatus()).isEqualTo(422);
     }
 
-      // ===========================================
-     // TEST BLOCK: GET /api/v1/users/{id} (Get User by Id)
+    // ===========================================
+    // TEST BLOCK: GET /api/v1/users/{id} (Get User by Id)
     // =============================================
 
     @Test
-    public void getUserById_WithValidId_ReturnsUserWithStatus200(){
+    public void getUserById_WithValidId_ReturnsUserWithStatus200() {
         UserResponseDto responseBody = testClient
                 .get()
                 .uri(USERS_URI + "/" + ADMIN_ID)
@@ -123,7 +125,7 @@ public class UserIT {
     }
 
     @Test
-    public void getUserById_WithInexistentId_ReturnsStatus404(){
+    public void getUserById_WithInexistentId_ReturnsStatus404() {
         ErrorMessage responseBody = testClient
                 .get()
                 .uri(USERS_URI + "/" + INEXISTENT_ID)
@@ -137,8 +139,8 @@ public class UserIT {
     }
 
     @Test
-    public void getUserById_WithoutToken_ReturnsStatus401(){
-         testClient
+    public void getUserById_WithoutToken_ReturnsStatus401() {
+        testClient
                 .get()
                 .uri(USERS_URI + "/" + ADMIN_ID)
                 .exchange()
@@ -147,7 +149,7 @@ public class UserIT {
     }
 
     @Test
-    public void getUserById_WithUserTryingToAccessAnotherUser_ReturnsStatus403(){
+    public void getUserById_WithUserTryingToAccessAnotherUser_ReturnsStatus403() {
         ErrorMessage responseBody = testClient
                 .get()
                 .uri(USERS_URI + "/" + ADMIN_ID)
@@ -160,12 +162,12 @@ public class UserIT {
         org.assertj.core.api.Assertions.assertThat(responseBody.getStatus()).isEqualTo(403);
     }
 
-      // ===========================================
-     // TEST BLOCK: GET /api/v1/users (Get All Users)
+    // ===========================================
+    // TEST BLOCK: GET /api/v1/users (Get All Users)
     // =============================================
 
     @Test
-    public void getAllUsers_ReturnsListOfUsersWithStatus200(){
+    public void getAllUsers_ReturnsListOfUsersWithStatus200() {
         UserResponseDto[] responseBody = testClient
                 .get()
                 .uri(USERS_URI)
@@ -179,20 +181,20 @@ public class UserIT {
     }
 
     @Test
-    public void getAllUsers_WithoutToken_ReturnsStatus401(){
-      testClient
+    public void getAllUsers_WithoutToken_ReturnsStatus401() {
+        testClient
                 .get()
                 .uri(USERS_URI)
                 .exchange()
                 .expectStatus().isUnauthorized();
     }
 
-      // ===========================================
-     // TEST BLOCK: PATCH /api/v1/users/{id}/password (Update Password)
+    // ===========================================
+    // TEST BLOCK: PATCH /api/v1/users/{id}/password (Update Password)
     // =================================================================
 
     @Test
-    public void updatePassword_WithValidData_ReturnsUserWithStatus200(){
+    public void updatePassword_WithValidData_ReturnsUserWithStatus200() {
         UserResponseDto responseBody = testClient
                 .patch()
                 .uri(USERS_URI + "/" + ADMIN_ID + "/password")
@@ -208,7 +210,7 @@ public class UserIT {
     }
 
     @Test
-    public void updatePassword_WithInvalidCurrentPassword_ReturnsStatus400(){
+    public void updatePassword_WithInvalidCurrentPassword_ReturnsStatus400() {
         ErrorMessage responseBody = testClient
                 .patch()
                 .uri(USERS_URI + "/" + ADMIN_ID + "/password")
@@ -224,7 +226,7 @@ public class UserIT {
     }
 
     @Test
-    public void updatePassword_WithMismatchedPasswords_ReturnsStatus400(){
+    public void updatePassword_WithMismatchedPasswords_ReturnsStatus400() {
         ErrorMessage responseBody = testClient
                 .patch()
                 .uri(USERS_URI + "/" + ADMIN_ID + "/password")
@@ -240,7 +242,7 @@ public class UserIT {
     }
 
     @Test
-    public void updatePassword_WithInexistentId_ReturnsStatus404(){
+    public void updatePassword_WithInexistentId_ReturnsStatus404() {
         ErrorMessage responseBody = testClient
                 .patch()
                 .uri(USERS_URI + "/" + INEXISTENT_ID + "/password")
@@ -256,7 +258,7 @@ public class UserIT {
     }
 
     @Test
-    public void updatePassword_WithInvalidData_ReturnsStatus422(){
+    public void updatePassword_WithInvalidData_ReturnsStatus422() {
         ErrorMessage responseBody = testClient
                 .patch()
                 .uri(USERS_URI + "/" + ADMIN_ID + "/password")
@@ -272,8 +274,8 @@ public class UserIT {
     }
 
     @Test
-    public void updatePassword_WithoutToken_ReturnsStatus401(){
-         testClient
+    public void updatePassword_WithoutToken_ReturnsStatus401() {
+        testClient
                 .patch()
                 .uri(USERS_URI + "/" + ADMIN_ID + "/password")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -283,7 +285,7 @@ public class UserIT {
     }
 
     @Test
-    public void updatePassword_WithUserTryingToUpdateAnotherUser_ReturnsStatus403(){
+    public void updatePassword_WithUserTryingToUpdateAnotherUser_ReturnsStatus403() {
         ErrorMessage responseBody = testClient
                 .patch()
                 .uri(USERS_URI + "/" + DOCTOR_ID + "/password")
