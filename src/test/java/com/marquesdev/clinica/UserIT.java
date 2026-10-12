@@ -25,6 +25,7 @@ public class UserIT {
 
     // Constante para a URI base de usuários
     private static final String USERS_URI = "/api/v1/users";
+    private static final String USERS_REGISTER_URI = "/api/v1/users/register";
 
     // Database IDs constants (SQL Script)
     private final UUID ADMIN_ID =
@@ -60,7 +61,7 @@ public class UserIT {
     public void createUser_WithValidCredentials_ReturnsCreatedUserWithStatus201() {
         UserResponseDto responseBody = testClient
                 .post()
-                .uri(USERS_URI)
+                .uri(USERS_REGISTER_URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new UserRequestDto("cleber@gmail.com", "123456"))
                 .exchange()
@@ -78,7 +79,7 @@ public class UserIT {
     public void createUser_WithDuplicateUsername_ReturnsStatus409() {
         ErrorMessage responseBody = testClient
                 .post()
-                .uri(USERS_URI)
+                .uri(USERS_REGISTER_URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new UserRequestDto(ADMIN_USER, "123456"))
                 .exchange()
@@ -93,7 +94,7 @@ public class UserIT {
     public void createUser_WithInvalidData_ReturnsStatus422() {
         ErrorMessage responseBody = testClient
                 .post()
-                .uri(USERS_URI)
+                .uri(USERS_REGISTER_URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new UserRequestDto("", ""))
                 .exchange()

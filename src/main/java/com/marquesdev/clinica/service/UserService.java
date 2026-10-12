@@ -32,11 +32,11 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public UserResponseDto createUser(UserRequestDto userRequestDto) {
+    public UserResponseDto createUser(UserRequestDto userRequestDto,Perfil perfil) {
        User user = userMapper.toUser(userRequestDto);
 
        try {
-           user.setPerfil(Perfil.USER);
+           user.setPerfil(perfil);
            user.setPassword(passwordEncoder.encode(user.getPassword()));
            User savedUser = userRepository.saveAndFlush(user);
            return toResponse(savedUser);

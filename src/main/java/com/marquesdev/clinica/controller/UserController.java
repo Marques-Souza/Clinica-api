@@ -3,6 +3,7 @@ package com.marquesdev.clinica.controller;
 import com.marquesdev.clinica.dto.PasswordRequestDto;
 import com.marquesdev.clinica.dto.UserRequestDto;
 import com.marquesdev.clinica.dto.UserResponseDto;
+import com.marquesdev.clinica.enums.Perfil;
 import com.marquesdev.clinica.exception.ErrorMessage;
 import com.marquesdev.clinica.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,9 +43,9 @@ public class UserController {
             }
 
     )
-    @PostMapping
+    @PostMapping("/register")
     public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto userRequestDto){
-       UserResponseDto savedUser = userService.createUser(userRequestDto);
+       UserResponseDto savedUser = userService.createUser(userRequestDto, Perfil.USER);
        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
     }
 
