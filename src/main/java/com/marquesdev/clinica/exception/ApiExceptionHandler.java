@@ -71,4 +71,15 @@ public class ApiExceptionHandler {
                 .body(new ErrorMessage(request, HttpStatus.BAD_REQUEST, ex.getMessage()));
 
     }
+
+    @ExceptionHandler({DoctorAlreadyExistsException.class, ClientAlreadyExistsException.class})
+    public ResponseEntity<ErrorMessage> profileAlreadyExistsException(RuntimeException ex,
+                                                                     HttpServletRequest request){
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new ErrorMessage(request, HttpStatus.CONFLICT, ex.getMessage()));
+    }
+
+
 }

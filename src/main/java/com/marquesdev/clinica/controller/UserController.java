@@ -50,6 +50,15 @@ public class UserController {
     }
 
 
+
+    @PostMapping("/doctor")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<UserResponseDto> createDoctor(@Valid @RequestBody UserRequestDto userRequestDto){
+        UserResponseDto savedUser = userService.createUser(userRequestDto, Perfil.DOCTOR);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+    }
+
+
     @Operation(summary = "Retrieve a user by ID",
             description = "Endpoint to get a user by ID (Bearer Token required)",
             security = @SecurityRequirement(name = "security"),

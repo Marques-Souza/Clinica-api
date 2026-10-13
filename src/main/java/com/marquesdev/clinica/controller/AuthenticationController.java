@@ -1,9 +1,13 @@
 package com.marquesdev.clinica.controller;
 
 import com.marquesdev.clinica.dto.UserLoginDto;
+import com.marquesdev.clinica.entity.User;
+import com.marquesdev.clinica.enums.Perfil;
 import com.marquesdev.clinica.exception.ErrorMessage;
 import com.marquesdev.clinica.jwt.JwtToken;
 import com.marquesdev.clinica.jwt.JwtUserDetailsService;
+import com.marquesdev.clinica.repository.DoctorRepository;
+import com.marquesdev.clinica.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -32,13 +36,15 @@ public class AuthenticationController {
 
     private final JwtUserDetailsService detailsService;
     private final AuthenticationManager authenticationManager;
+    private final UserService userService;
+    private final DoctorRepository doctorRepository;
 
     @Operation(summary = "Authenticate user",
             description = "Authenticate a user with email and password and return a JWT token",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Authentication successful",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = JwtToken.class))),
-                    @ApiResponse(responseCode = "400", description = "Invalid credentials",
+                    @ApiResponse(responseCode = "401", description = "Invalid credentials",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
                     @ApiResponse(responseCode = "422", description = "Invalid fields",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class)))
@@ -52,11 +58,34 @@ public class AuthenticationController {
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(userDto.email(), userDto.password());
             authenticationManager.authenticate(authenticationToken);
+            
+            User user = userService.findByEmail(userDto.email());
+            if (user.getPerfil() == Perfil.DOCTOR) {
+                boolean doctorActive = doctorRepository.findByUserEmail(userDto.email())
+                        .map(doctor -> Boolean.TRUE.equals(doctor.getActive()))
+                        .orElse(false);
+                if (!doctorActive) {
+                    log.warn("Login blocked for disabled doctor: {}", userDto.email());
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body(new ErrorMessage(
+                                    request,
+                                    HttpStatus.UNAUTHORIZED,
+                                    "Doctor account is disabled"
+                            ));
+                }
+            }
+            
             JwtToken token = detailsService.getTokenAuthenticated(userDto.email());
             return ResponseEntity.ok(token);
         } catch (AuthenticationException ex) {
-            log.warn("Authentication falid for user {}: {}", userDto.email(), ex.getMessage());
+            log.warn("Authentication failed for user {}", userDto.email());
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ErrorMessage(
+                            request,
+                            HttpStatus.UNAUTHORIZED,
+                            "Invalid credentials"
+                    ));
         }
-        return ResponseEntity.badRequest().body(new ErrorMessage(request, HttpStatus.BAD_REQUEST, "Invalid credentials"));
     }
 }

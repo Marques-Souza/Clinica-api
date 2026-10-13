@@ -5,6 +5,7 @@ import com.marquesdev.clinica.dto.ClientResponseDto;
 import com.marquesdev.clinica.dto.ClientUpdateRequestDto;
 import com.marquesdev.clinica.entity.Client;
 import com.marquesdev.clinica.entity.User;
+import com.marquesdev.clinica.exception.ClientAlreadyExistsException;
 import com.marquesdev.clinica.exception.EntityNotFoundException;
 import com.marquesdev.clinica.integration.viacep.ViaCepResponseDto;
 import com.marquesdev.clinica.integration.viacep.ViaCepService;
@@ -24,6 +25,9 @@ public class ClientService {
 
     public ClientResponseDto createClient(String email, ClientRequestDto clientRequestDto) {
         User user = userService.findByEmail(email);
+        if (clientRepository.existsByUser_Id(user.getId())) {
+            throw new ClientAlreadyExistsException("Client profile exists for this user.");
+        }
         Client client = clientMapper.toClient(clientRequestDto);
 
         client.assignUser(user);

@@ -46,7 +46,7 @@ public class JwtUtils {
                 .setSubject(email)
                 .setIssuedAt(issuedAt)
                 .setExpiration(limit)
-                .signWith(generateKey(), SignatureAlgorithm.HS256)
+                .signWith(generateKey())
                 .claim("perfil", perfil)
                 .compact();
 

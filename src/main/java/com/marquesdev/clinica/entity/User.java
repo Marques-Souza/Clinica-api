@@ -64,6 +64,7 @@ public class User {
         this.perfil = perfil;
     }
 
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -79,8 +80,6 @@ public class User {
 
     @Override
     public String toString() {
-        return "User{" +
-                "id=" + id +
-                '}';
+        return "User{" + "id=" + id + '}';
     }
 }
