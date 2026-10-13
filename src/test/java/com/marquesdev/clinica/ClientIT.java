@@ -51,7 +51,7 @@ public class ClientIT {
     // =============================================
 
     @Test
-    public void createClient_WithValidData_ReturnsClientWithStatus200() {
+    public void createClient_WithValidData_ReturnsClientWithStatus201() {
         ClientResponseDto responseBody = testClient
                 .put()
                 .uri(CLIENTS_URI + "/me")
@@ -65,7 +65,7 @@ public class ClientIT {
                 ))
                 .headers(JwtAuthentication.getHeaderAuthorization(testClient, USER_WITHOUT_CLIENT_EMAIL, USER_WITHOUT_CLIENT_PASS))
                 .exchange()
-                .expectStatus().isOk()
+                .expectStatus().isCreated()
                 .expectBody(ClientResponseDto.class)
                 .returnResult().getResponseBody();
         org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
