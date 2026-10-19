@@ -19,6 +19,8 @@ spring:
     hibernate:
       ddl-auto: update
 
+
+
 ## API Endpoint configuration
 app:
   base-url: http://localhost:8080
@@ -27,3 +29,5 @@ app:
       users: /api/v1/users
       clients: /api/v1/clients
       doctors: /api/v1/doctors
+      appointments: /api/v1/appointments
+      specialties: /api/v1/specialties

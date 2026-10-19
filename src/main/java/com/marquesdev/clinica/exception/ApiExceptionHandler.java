@@ -72,7 +72,7 @@ public class ApiExceptionHandler {
 
     }
 
-    @ExceptionHandler({DoctorAlreadyExistsException.class, ClientAlreadyExistsException.class})
+    @ExceptionHandler({DoctorAlreadyExistsException.class, ClientAlreadyExistsException.class, SpecialtyConfigAlreadyExistsException.class, DoctorInactiveException.class, ScheduleConflictException.class })
     public ResponseEntity<ErrorMessage> profileAlreadyExistsException(RuntimeException ex,
                                                                      HttpServletRequest request){
         return ResponseEntity

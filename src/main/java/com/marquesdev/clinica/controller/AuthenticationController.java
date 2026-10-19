@@ -61,10 +61,8 @@ public class AuthenticationController {
             
             User user = userService.findByEmail(userDto.email());
             if (user.getPerfil() == Perfil.DOCTOR) {
-                boolean doctorActive = doctorRepository.findByUserEmail(userDto.email())
-                        .map(doctor -> Boolean.TRUE.equals(doctor.getActive()))
-                        .orElse(false);
-                if (!doctorActive) {
+                var doctor = doctorRepository.findByUserEmail(userDto.email());
+                if (doctor.isPresent() && !Boolean.TRUE.equals(doctor.get().getActive())) {
                     log.warn("Login blocked for disabled doctor: {}", userDto.email());
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body(new ErrorMessage(

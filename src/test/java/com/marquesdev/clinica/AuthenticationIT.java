@@ -49,18 +49,18 @@ public class AuthenticationIT {
     }
 
     @Test
-    public void authenticate_WithInvalidCredentials_ReturnsStatus400(){
+    public void authenticate_WithInvalidCredentials_ReturnsStatus401(){
         ErrorMessage responseBody = testClient
                 .post()
                 .uri(AUTH_URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new UserLoginDto(INVALID_USER, INVALID_PASS))
                 .exchange()
-                .expectStatus().isEqualTo(400)
+                .expectStatus().isUnauthorized()
                 .expectBody(ErrorMessage.class)
                 .returnResult().getResponseBody();
         org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
-        org.assertj.core.api.Assertions.assertThat(responseBody.getStatus()).isEqualTo(400);
+        org.assertj.core.api.Assertions.assertThat(responseBody.getStatus()).isEqualTo(401);
     }
 
     @Test
