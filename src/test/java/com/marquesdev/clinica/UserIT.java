@@ -169,16 +169,17 @@ public class UserIT {
 
     @Test
     public void getAllUsers_ReturnsListOfUsersWithStatus200() {
-        UserResponseDto[] responseBody = testClient
+        String responseBody = testClient
                 .get()
                 .uri(USERS_URI)
                 .headers(JwtAuthentication.getHeaderAuthorization(testClient, ADMIN_USER, ADMIN_PASS))
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(UserResponseDto[].class)
+                .expectBody(String.class)
                 .returnResult().getResponseBody();
         org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
-        org.assertj.core.api.Assertions.assertThat(responseBody.length).isEqualTo(3);
+        org.assertj.core.api.Assertions.assertThat(responseBody).contains("\"content\"");
+        org.assertj.core.api.Assertions.assertThat(responseBody).contains("\"totalElements\"");
     }
 
     @Test

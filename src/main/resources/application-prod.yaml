@@ -1,0 +1,10 @@
+# Configurações específicas para ambiente de produção
+spring:
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+
+  h2:
+    console:
+      enabled: false

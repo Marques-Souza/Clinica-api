@@ -32,3 +32,5 @@ app:
       appointments: /api/v1/appointments
       specialties: /api/v1/specialties
       reports: /api/v1/reports
+  jwt:
+    secret: ${JWT_SECRET:0123456789-0123456789-0123456789-0123456789}

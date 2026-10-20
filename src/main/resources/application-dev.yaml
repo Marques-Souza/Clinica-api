@@ -1,0 +1,10 @@
+# Configurações específicas para ambiente de desenvolvimento
+spring:
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+
+  h2:
+    console:
+      enabled: true

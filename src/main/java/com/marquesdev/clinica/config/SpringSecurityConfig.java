@@ -2,7 +2,9 @@ package com.marquesdev.clinica.config;
 
 import com.marquesdev.clinica.jwt.JwtAuthenticationEntryPoint;
 import com.marquesdev.clinica.jwt.JwtAuthorizationFilter;
+import com.marquesdev.clinica.jwt.JwtUtils;
 import com.marquesdev.clinica.jwt.JwtUserDetailsService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -16,13 +18,21 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-@EnableWebMvc
+import jakarta.annotation.PostConstruct;
+
 @EnableWebSecurity
 @Configuration
 @EnableMethodSecurity
 public class SpringSecurityConfig {
+
+    @Value("${app.jwt.secret}")
+    private String jwtSecret;
+
+    @PostConstruct
+    public void initJwtSecret() {
+        JwtUtils.setJwtSecret(jwtSecret);
+    }
 
     private static final String[] DOCUMENTATION_OPENAPI = {
             "/docs/index.html",

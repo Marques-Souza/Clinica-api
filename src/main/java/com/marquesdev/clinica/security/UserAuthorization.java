@@ -26,7 +26,7 @@ public class UserAuthorization {
         }
 
         if (authenticatedPerfil == Perfil.DOCTOR){
-            return false;
+            return authenticatedUserId.equals(id);
         }
 
         if (authenticatedPerfil == Perfil.ADMIN){

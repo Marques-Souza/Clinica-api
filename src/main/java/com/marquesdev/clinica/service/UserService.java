@@ -20,6 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -54,10 +57,9 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public List<UserResponseDto> getAllUsers() {
-        return userRepository.findAll()
-                .stream()
-                .map(this::toResponse).toList();
+    public Page<UserResponseDto> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable)
+                .map(this::toResponse);
     }
 
     @Transactional
