@@ -1,0 +1,83 @@
+@startuml
+skinparam backgroundColor #1e1e1e
+skinparam shadowing false
+skinparam linetype ortho
+hide circle
+skinparam class {
+  BackgroundColor #2d2d2d
+  BorderColor #4a90d9
+  ArrowColor #8ab4f8
+  AttributeFontColor #e0e0e0
+  AttributeFontName Monospace
+  AttributeFontsize 13
+  HeaderFontColor #8ab4f8
+  HeaderFontName Monospace
+  HeaderFontsize 14
+}
+
+left to right direction
+
+class "User" as User <<Table>> {
+  + id: UUID
+  + email: String
+  + password: String
+  + perfil: Perfil
+  + createdAt: LocalDateTime
+  + modifiedAt: LocalDateTime
+  + createdBy: String
+  + modifiedBy: String
+}
+
+class "Client" as Client <<Table>> {
+  + id: UUID
+  + fullName: String
+  + cpf: String
+  + phone: String
+  + cep: String
+  + street: String
+  + neighborhood: String
+  + city: String
+  + state: String
+  + number: String
+}
+
+class "Doctor" as Doctor <<Table>> {
+  + id: UUID
+  + fullName: String
+  + cpf: String
+  + crm: String
+  + specialty: Specialty
+  + active: Boolean
+  + createdAt: LocalDateTime
+  + modifiedAt: LocalDateTime
+  + createdBy: String
+  + modifiedBy: String
+}
+
+class "Appointment" as Appointment <<Table>> {
+  + id: UUID
+  + scheduledAt: LocalDateTime
+  + consultationFee: BigDecimal
+  + paymentMethod: PaymentMethod
+  + paymentStatus: PaymentStatus
+  + status: AppointmentStatus
+  + reason: String
+  + durationMinutes: Integer
+  + appointmentCode: String
+  + createdBy: String
+  + modifiedBy: String
+}
+
+class "SpecialtyConfig" as SpecialtyConfig <<Table>> {
+  + id: UUID
+  + specialty: Specialty
+  + consultationFee: BigDecimal
+  + durationMinutes: Integer
+}
+
+User ||--o{ Client : user_id
+User ||--o{ Doctor : user_id
+Client ||--o{ Appointment : patient_id
+Doctor ||--o{ Appointment : doctor_id
+
+@enduml
