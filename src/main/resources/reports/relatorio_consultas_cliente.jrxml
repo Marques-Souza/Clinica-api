@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="relatorio_consultas_cliente" pageWidth="595" pageHeight="842"
+              columnWidth="535" leftMargin="30" rightMargin="30" topMargin="24" bottomMargin="24">
+    <parameter name="clientName" class="java.lang.String"/>
+    <parameter name="clientCpf" class="java.lang.String"/>
+    <parameter name="clientEmail" class="java.lang.String"/>
+    <parameter name="generatedAt" class="java.lang.String"/>
+    <parameter name="appointmentCount" class="java.lang.Integer"/>
+    <parameter name="totalAmount" class="java.math.BigDecimal"/>
+    <field name="appointmentCode" class="java.lang.String"/>
+    <field name="scheduledAt" class="java.lang.String"/>
+    <field name="doctorName" class="java.lang.String"/>
+    <field name="specialty" class="java.lang.String"/>
+    <field name="duration" class="java.lang.String"/>
+    <field name="fee" class="java.math.BigDecimal"/>
+    <field name="paymentMethod" class="java.lang.String"/>
+    <field name="paymentStatus" class="java.lang.String"/>
+    <field name="appointmentStatus" class="java.lang.String"/>
+    <title>
+        <band height="186">
+            <!-- Banner and vector identity mark -->
+            <rectangle><reportElement mode="Opaque" x="0" y="0" width="535" height="82" forecolor="#103B4A" backcolor="#103B4A"/></rectangle>
+            <rectangle><reportElement mode="Opaque" x="0" y="78" width="535" height="4" forecolor="#23B5A5" backcolor="#23B5A5"/></rectangle>
+            <ellipse><reportElement mode="Opaque" x="17" y="14" width="54" height="54" forecolor="#23B5A5" backcolor="#23B5A5"/></ellipse>
+            <ellipse><reportElement mode="Opaque" x="21" y="18" width="46" height="46" forecolor="#FFFFFF" backcolor="#FFFFFF"/></ellipse>
+            <ellipse><reportElement mode="Opaque" x="25" y="22" width="38" height="38" forecolor="#176B70" backcolor="#176B70"/></ellipse>
+            <rectangle><reportElement mode="Opaque" x="40" y="28" width="8" height="26" forecolor="#FFFFFF" backcolor="#FFFFFF"/></rectangle>
+            <rectangle><reportElement mode="Opaque" x="31" y="37" width="26" height="8" forecolor="#FFFFFF" backcolor="#FFFFFF"/></rectangle>
+            <staticText><reportElement x="86" y="14" width="330" height="31" forecolor="#FFFFFF"/><textElement><font fontName="SansSerif" size="23" isBold="true"/></textElement><text><![CDATA[CLINICA]]></text></staticText>
+            <staticText><reportElement x="88" y="48" width="350" height="17" forecolor="#BDE8E3"/><textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[SAUDE  |  CUIDADO  |  BEM-ESTAR]]></text></staticText>
+            <staticText><reportElement x="0" y="96" width="535" height="25" forecolor="#123B4A"/><textElement><font fontName="SansSerif" size="17" isBold="true"/></textElement><text><![CDATA[Demonstrativo de consultas]]></text></staticText>
+            <staticText><reportElement x="0" y="121" width="535" height="17" forecolor="#617985"/><textElement><font fontName="SansSerif" size="9"/></textElement><text><![CDATA[Resumo dos atendimentos vinculados ao seu cadastro]]></text></staticText>
+            <rectangle><reportElement mode="Opaque" x="0" y="145" width="535" height="1" forecolor="#D9E7E8" backcolor="#D9E7E8"/></rectangle>
+            <staticText><reportElement x="0" y="153" width="63" height="14" forecolor="#617985"/><textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[CLIENTE]]></text></staticText>
+            <textField><reportElement x="0" y="166" width="260" height="17" forecolor="#123B4A"/><textElement><font fontName="SansSerif" size="10" isBold="true"/></textElement><textFieldExpression><![CDATA[$P{clientName}]]></textFieldExpression></textField>
+            <staticText><reportElement x="275" y="153" width="50" height="14" forecolor="#617985"/><textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[CPF]]></text></staticText>
+            <textField><reportElement x="275" y="166" width="120" height="17" forecolor="#123B4A"/><textElement><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$P{clientCpf}]]></textFieldExpression></textField>
+            <staticText><reportElement x="410" y="153" width="100" height="14" forecolor="#617985"/><textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[EMITIDO EM]]></text></staticText>
+            <textField><reportElement x="410" y="166" width="125" height="17" forecolor="#123B4A"/><textElement><font fontName="SansSerif" size="9"/></textElement><textFieldExpression><![CDATA[$P{generatedAt}]]></textFieldExpression></textField>
+        </band>
+    </title>
+    <columnHeader>
+        <band height="34">
+            <rectangle><reportElement mode="Opaque" x="0" y="0" width="535" height="30" forecolor="#176B70" backcolor="#176B70"/></rectangle>
+            <staticText><reportElement x="10" y="7" width="98" height="17" forecolor="#FFFFFF"/><textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[CONSULTA / DATA]]></text></staticText>
+            <staticText><reportElement x="116" y="7" width="166" height="17" forecolor="#FFFFFF"/><textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[PROFISSIONAL]]></text></staticText>
+            <staticText><reportElement x="290" y="7" width="65" height="17" forecolor="#FFFFFF"/><textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[VALOR]]></text></staticText>
+            <staticText><reportElement x="360" y="7" width="88" height="17" forecolor="#FFFFFF"/><textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[PAGAMENTO]]></text></staticText>
+            <staticText><reportElement x="452" y="7" width="78" height="17" forecolor="#FFFFFF"/><textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[STATUS]]></text></staticText>
+        </band>
+    </columnHeader>
+    <detail>
+        <band height="48">
+            <textField><reportElement x="10" y="5" width="98" height="16" forecolor="#123B4A"/><textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><textFieldExpression><![CDATA[$F{appointmentCode}]]></textFieldExpression></textField>
+            <textField><reportElement x="10" y="23" width="98" height="16" forecolor="#617985"/><textElement><font fontName="SansSerif" size="8"/></textElement><textFieldExpression><![CDATA[$F{scheduledAt}]]></textFieldExpression></textField>
+            <textField><reportElement x="116" y="5" width="166" height="17" forecolor="#123B4A"/><textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement><textFieldExpression><![CDATA[$F{doctorName}]]></textFieldExpression></textField>
+            <textField><reportElement x="116" y="24" width="166" height="16" forecolor="#617985"/><textElement><font fontName="SansSerif" size="8"/></textElement><textFieldExpression><![CDATA[$F{specialty} + "  •  " + $F{duration}]]></textFieldExpression></textField>
+            <textField pattern="R$ #,##0.00"><reportElement x="290" y="8" width="65" height="18" forecolor="#123B4A"/><textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><textFieldExpression><![CDATA[$F{fee}]]></textFieldExpression></textField>
+            <textField><reportElement x="360" y="6" width="88" height="16" forecolor="#176B70"/><textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><textFieldExpression><![CDATA[$F{paymentMethod}]]></textFieldExpression></textField>
+            <textField><reportElement x="360" y="23" width="88" height="15" forecolor="#617985"/><textElement><font fontName="SansSerif" size="8"/></textElement><textFieldExpression><![CDATA[$F{paymentStatus}]]></textFieldExpression></textField>
+            <textField><reportElement x="452" y="8" width="78" height="18" forecolor="#123B4A"/><textElement><font fontName="SansSerif" size="8"/></textElement><textFieldExpression><![CDATA[$F{appointmentStatus}]]></textFieldExpression></textField>
+            <rectangle><reportElement mode="Opaque" x="0" y="46" width="535" height="1" forecolor="#D9E7E8" backcolor="#D9E7E8"/></rectangle>
+        </band>
+    </detail>
+    <pageFooter>
+        <band height="18">
+            <rectangle><reportElement mode="Opaque" x="0" y="0" width="535" height="1" forecolor="#D9E7E8" backcolor="#D9E7E8"/></rectangle>
+            <staticText><reportElement x="0" y="5" width="250" height="12" forecolor="#617985"/><textElement><font fontName="SansSerif" size="7"/></textElement><text><![CDATA[Documento pessoal • Clínica]]></text></staticText>
+            <textField><reportElement x="485" y="5" width="50" height="12" forecolor="#617985"/><textElement textAlignment="Right"><font fontName="SansSerif" size="7"/></textElement><textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER}]]></textFieldExpression></textField>
+        </band>
+    </pageFooter>
+    <summary>
+        <band height="78">
+            <rectangle><reportElement mode="Opaque" x="0" y="8" width="535" height="52" forecolor="#EAF4F3" backcolor="#EAF4F3"/></rectangle>
+            <staticText><reportElement x="16" y="18" width="135" height="16" forecolor="#617985"/><textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[CONSULTAS NO RELATÓRIO]]></text></staticText>
+            <textField><reportElement x="16" y="34" width="80" height="19" forecolor="#123B4A"/><textElement><font fontName="SansSerif" size="12" isBold="true"/></textElement><textFieldExpression><![CDATA[$P{appointmentCount}]]></textFieldExpression></textField>
+            <staticText><reportElement x="324" y="18" width="100" height="16" forecolor="#617985"/><textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[TOTAL LISTADO]]></text></staticText>
+            <textField pattern="R$ #,##0.00"><reportElement x="324" y="34" width="190" height="21" forecolor="#176B70"/><textElement><font fontName="SansSerif" size="14" isBold="true"/></textElement><textFieldExpression><![CDATA[$P{totalAmount}]]></textFieldExpression></textField>
+            <staticText><reportElement x="0" y="63" width="535" height="12" forecolor="#617985"/><textElement><font fontName="SansSerif" size="7"/></textElement><text><![CDATA[Demonstrativo informativo. Este documento não substitui nota fiscal.]]></text></staticText>
+        </band>
+    </summary>
+</jasperReport>

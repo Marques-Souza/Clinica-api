@@ -31,3 +31,4 @@ app:
       doctors: /api/v1/doctors
       appointments: /api/v1/appointments
       specialties: /api/v1/specialties
+      reports: /api/v1/reports

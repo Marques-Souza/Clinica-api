@@ -28,6 +28,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
 
 
     Page<Appointment> findByPatient_User_Email(String email, Pageable pageable);
+    List<Appointment> findAllByPatient_User_EmailOrderByScheduledAtDesc(String email);
+    List<Appointment> findAllByOrderByScheduledAtDesc();
+    List<Appointment> findAllByDoctor_CrmOrderByScheduledAtDesc(String crm);
     Optional<Appointment> findByAppointmentCode(String code);
 
     boolean existsByAppointmentCode(String appointmentCode);
