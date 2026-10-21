@@ -72,7 +72,7 @@ Depois, na raiz do projeto, inicie a aplicação:
 
 No Linux ou macOS, use `./mvnw spring-boot:run`.
 
-Por padrão, o Hibernate está configurado com `ddl-auto: update`. O perfil `dev` também habilita a exibição dos comandos SQL e o console H2; a conexão principal, porém, continua sendo a definida pelas variáveis do PostgreSQL. O perfil `prod` usa `ddl-auto: validate`, então o banco precisa estar com o schema criado antes de iniciar a aplicação.
+Por padrão, o Hibernate está configurado com `ddl-auto: update`, inclusive no perfil `prod`, para criar e atualizar as tabelas ao iniciar. O perfil `dev` também habilita a exibição dos comandos SQL e o console H2; a conexão principal continua sendo a definida pelas variáveis do PostgreSQL.
 
 ## Executando com Docker Compose
 
@@ -88,9 +88,27 @@ Para encerrar:
 docker compose down
 ```
 
-O arquivo `docker/init/01-schema.sql` cria as tabelas quando o PostgreSQL inicializa um volume vazio. O perfil `prod` da API então confere o schema com `ddl-auto: validate`. Esse script é usado pelo Docker Compose e não adiciona dependências nem altera as classes Java.
+O arquivo `docker/init/01-schema.sql` cria as tabelas quando o PostgreSQL inicializa um volume vazio. A API também cria ou atualiza as tabelas ao iniciar. Esse script é usado pelo Docker Compose e não adiciona dependências nem altera as classes Java.
 
 Scripts em `/docker-entrypoint-initdb.d` só são executados na primeira inicialização do volume. Se você já tinha subido o banco antes dessa configuração, o script não será aplicado automaticamente ao volume existente; nesse caso, aplique o SQL manualmente no banco. As credenciais definidas no Compose são apenas para uso local; não as use em produção.
+
+## Publicando no Render
+
+O repositório contém um `Dockerfile` pronto para o Render. No painel, crie um serviço **Web Service** conectado a este repositório e selecione o ambiente **Docker**. Crie também um PostgreSQL no Render, de preferência na mesma região do serviço, e configure estas variáveis no Web Service:
+
+| Variável | Valor |
+|---|---|
+| `SPRING_PROFILES_ACTIVE` | `prod` |
+| `DB_URL` | `jdbc:postgresql://<HOST_INTERNO>:5432/<NOME_DO_BANCO>` |
+| `DB_USERNAME` | Usuário informado pelo PostgreSQL do Render |
+| `DB_PASSWORD` | Senha informada pelo PostgreSQL do Render |
+| `JWT_SECRET` | Segredo longo, aleatório e exclusivo para essa instância |
+| `INITIAL_ADMIN_EMAIL` | `admin.demo@clinica.com` |
+| `INITIAL_ADMIN_PASSWORD` | `ClinicaDemo@2026!` |
+
+Use o host interno, o nome do banco, o usuário e a senha exibidos nos detalhes do PostgreSQL do Render; não use as credenciais do Docker Compose. O Render fornece a variável `PORT` para o serviço, e a aplicação a utiliza automaticamente. Com `ddl-auto: update`, as tabelas são criadas na primeira inicialização e o administrador de demonstração também é criado. Depois do deploy, abra `/swagger-ui/index.html` no endereço público do serviço.
+
+As credenciais administrativas acima são públicas. Mantenha nessa instância apenas dados fictícios e não use a configuração de demonstração para dados de pacientes ou em produção real.
 
 ## Autenticação
 
