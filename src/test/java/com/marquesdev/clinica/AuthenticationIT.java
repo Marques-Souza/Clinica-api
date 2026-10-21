@@ -78,4 +78,19 @@ public class AuthenticationIT {
         org.assertj.core.api.Assertions.assertThat(responseBody.getStatus()).isEqualTo(422);
     }
 
+    @Test
+    public void authenticate_WithPasswordLongerThanTwelveCharacters_ReturnsStatus401(){
+        ErrorMessage responseBody = testClient
+                .post()
+                .uri(AUTH_URI)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new UserLoginDto("admin.demo@clinica.com", "ClinicaDemo@2026!"))
+                .exchange()
+                .expectStatus().isUnauthorized()
+                .expectBody(ErrorMessage.class)
+                .returnResult().getResponseBody();
+        org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
+        org.assertj.core.api.Assertions.assertThat(responseBody.getStatus()).isEqualTo(401);
+    }
+
 }

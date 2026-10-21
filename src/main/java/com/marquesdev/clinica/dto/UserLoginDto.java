@@ -2,7 +2,6 @@ package com.marquesdev.clinica.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 public record UserLoginDto(
 
@@ -11,7 +10,6 @@ public record UserLoginDto(
         String email,
 
         @NotBlank(message = "Password cannot be blank.")
-        @Size(min = 5, max = 12, message = "Password must be between 5 and 12 characters.")
         String password
 
 ) {

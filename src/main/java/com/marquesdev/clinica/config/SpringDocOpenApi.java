@@ -18,8 +18,8 @@ public class SpringDocOpenApi {
                 .components(new Components().addSecuritySchemes("security", securityScheme()))
                 .info(
                       new Info()
-                              .title("REST API - Spring Park")
-                              .description("REST API for clinic management, including patients, doctors, and appointments.")
+                              .title("API de Clínica Médica")
+                              .description("API REST para gerenciamento de pacientes, médicos e consultas.")
                               .version("1.0.0")
                               .license(new License().name("Apache 2.0").url("https://www.apache.org/licenses/LICENSE-2.0"))
                               .contact(new Contact().name("Marques Souza").email("marques.wsouza357@gmail.com"))
