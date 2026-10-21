@@ -111,7 +111,7 @@ Este usuário e senha são fictícios e servem para testar as funcionalidades ad
 | E-mail | `admin.demo@clinica.com` |
 | Senha | `ClinicaDemo@2026!` |
 
-Com a aplicação iniciada com essas credenciais configuradas em `INITIAL_ADMIN_EMAIL` e `INITIAL_ADMIN_PASSWORD`, acesse o Swagger, faça uma requisição `POST /api/v1/auth` com o e-mail e a senha acima e use o token retornado no botão **Authorize** para testar as rotas administrativas.
+Ao iniciar pelo Docker Compose, essas credenciais já são configuradas por padrão. Se iniciar a aplicação fora do Compose, defina `INITIAL_ADMIN_EMAIL` e `INITIAL_ADMIN_PASSWORD` com os valores acima. Depois, acesse o Swagger, faça uma requisição `POST /api/v1/auth` com o e-mail e a senha e use o token retornado no botão **Authorize** para testar as rotas administrativas.
 
 Essas credenciais são públicas e dão acesso de administrador a qualquer pessoa. Use-as somente em uma instância de demonstração com dados fictícios; não reutilize essa senha em outros serviços nem use essa configuração em produção. A aplicação cria o administrador na primeira inicialização e armazena a senha usando BCrypt. Se a conta já existir como administradora, a senha não é redefinida nas próximas inicializações. Sem as duas variáveis, nenhum administrador é criado automaticamente.
 

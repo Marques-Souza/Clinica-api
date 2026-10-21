@@ -28,6 +28,8 @@ services:
       DB_PASSWORD: postgres
       JWT_SECRET: 0123456789-0123456789-0123456789
       SPRING_PROFILES_ACTIVE: prod
+      INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-admin.demo@clinica.com}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-ClinicaDemo@2026!}
     depends_on:
       postgres:
         condition: service_healthy
