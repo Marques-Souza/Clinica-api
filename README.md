@@ -110,6 +110,13 @@ Use o host interno, o nome do banco, o usuário e a senha exibidos nos detalhes 
 
 As credenciais administrativas acima são públicas. Mantenha nessa instância apenas dados fictícios e não use a configuração de demonstração para dados de pacientes ou em produção real.
 
+## Deploy
+
+- API: https://clinica-api-oim6.onrender.com
+- Documentação (Swagger): https://clinica-api-oim6.onrender.com/swagger-ui/index.html
+
+> Hospedada no plano gratuito do Render: se ficar um tempo sem acesso, a primeira requisição pode demorar alguns minutos para "acordar" o servidor.
+
 ## Autenticação
 
 Para obter um token, envie e-mail e senha para `POST /api/v1/auth`. Nas demais rotas protegidas, envie o token no cabeçalho:
