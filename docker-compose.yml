@@ -30,6 +30,13 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-admin.demo@clinica.com}
       INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-ClinicaDemo@2026!}
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-true}
+      MAIL_SMTP_STARTTLS: ${MAIL_SMTP_STARTTLS:-true}
+      MAIL_FROM: ${MAIL_FROM:-${MAIL_USERNAME:-no-reply@clinica.local}}
     depends_on:
       postgres:
         condition: service_healthy

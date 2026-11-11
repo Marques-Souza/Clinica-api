@@ -6,6 +6,18 @@ spring:
     locale-resolver: fixed
     locale: pt_BR
 
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:true}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS:true}
+
   datasource:
     driver-class-name: org.postgresql.Driver
     url: ${DB_URL}
@@ -19,10 +31,10 @@ spring:
       ddl-auto: update
 
 server:
-  port: ${PORT:8080}
+  port: ${PORT:8081}
 
 app:
-  base-url: ${APP_BASE_URL:${RENDER_EXTERNAL_URL:http://localhost:8080}}
+  base-url: ${APP_BASE_URL:${RENDER_EXTERNAL_URL:http://localhost:8081}}
   api:
     endpoints:
       users: /api/v1/users
@@ -31,8 +43,11 @@ app:
       appointments: /api/v1/appointments
       specialties: /api/v1/specialties
       reports: /api/v1/reports
+      dashboard: /api/v1/admin/dashboard
   jwt:
     secret: ${JWT_SECRET:0123456789-0123456789-0123456789-0123456789}
   initial-admin:
     email: ${INITIAL_ADMIN_EMAIL:}
     password: ${INITIAL_ADMIN_PASSWORD:}
+  password-recovery:
+    from: "${MAIL_FROM:${MAIL_USERNAME:no-reply@clinica.local}}"
