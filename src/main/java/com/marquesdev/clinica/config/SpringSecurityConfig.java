@@ -104,12 +104,18 @@ public class SpringSecurityConfig {
                 .map(String::trim)
                 .filter(origin -> !origin.isEmpty())
                 .toList();
-        if (allowedOrigins.isEmpty() || allowedOrigins.contains("*")) {
-            throw new IllegalStateException("CORS_ALLOWED_ORIGINS must list explicit origins");
+        
+        if (allowedOrigins.isEmpty()) {
+            config.setAllowedOriginPatterns(List.of("*"));
+        } else if (allowedOrigins.contains("*")) {
+            config.setAllowedOriginPatterns(List.of("*"));
+        } else {
+            config.setAllowedOrigins(allowedOrigins);
         }
-        config.setAllowedOrigins(allowedOrigins);
+        
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
