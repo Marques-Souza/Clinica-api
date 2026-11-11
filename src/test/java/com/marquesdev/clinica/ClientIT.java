@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.http.MediaType;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -30,6 +31,9 @@ public class ClientIT {
 
     @MockitoBean
     private ViaCepService viaCepService;
+
+    @MockitoBean
+    private JavaMailSender mailSender;
 
     private static final String CLIENTS_URI = "/api/v1/clients";
 

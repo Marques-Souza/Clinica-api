@@ -1,18 +1,31 @@
 package com.marquesdev.clinica;
 
 import com.marquesdev.clinica.dto.PasswordRequestDto;
+import com.marquesdev.clinica.dto.PasswordRecoveryConfirmDto;
+import com.marquesdev.clinica.dto.PasswordRecoveryRequestDto;
+import com.marquesdev.clinica.dto.PasswordResetRequestDto;
+import com.marquesdev.clinica.dto.AdminDashboardSummaryDto;
 import com.marquesdev.clinica.dto.UserRequestDto;
 import com.marquesdev.clinica.dto.UserResponseDto;
 import com.marquesdev.clinica.exception.ErrorMessage;
+import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.http.MediaType;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -22,6 +35,9 @@ public class UserIT {
 
     @Autowired
     private WebTestClient testClient;
+
+    @MockitoBean
+    private JavaMailSender mailSender;
 
     // Constante para a URI base de usuários
     private static final String USERS_URI = "/api/v1/users";
@@ -183,12 +199,45 @@ public class UserIT {
     }
 
     @Test
+    public void getAllUsers_FiltersEmailAndPerfilBeforePagination() {
+        testClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(USERS_URI)
+                        .queryParam("search", "KAIO")
+                        .queryParam("perfil", "DOCTOR")
+                        .queryParam("page", 0)
+                        .queryParam("size", 1)
+                        .build())
+                .headers(JwtAuthentication.getHeaderAuthorization(testClient, ADMIN_USER, ADMIN_PASS))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.content[0].email").isEqualTo(DOCTOR_USER)
+                .jsonPath("$.content[0].perfil").isEqualTo("DOCTOR")
+                .jsonPath("$.totalElements").isEqualTo(1);
+    }
+
+    @Test
     public void getAllUsers_WithoutToken_ReturnsStatus401() {
         testClient
                 .get()
                 .uri(USERS_URI)
                 .exchange()
                 .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    public void getAllUsers_NonAdminCannotSearchUsers() {
+        testClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(USERS_URI)
+                        .queryParam("search", "kaio")
+                        .build())
+                .headers(JwtAuthentication.getHeaderAuthorization(testClient, ATTENDANT_USER, ATTENDANT_PASS))
+                .exchange()
+                .expectStatus().isForbidden();
     }
 
     // ===========================================
@@ -209,6 +258,35 @@ public class UserIT {
                 .returnResult().getResponseBody();
         org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
         org.assertj.core.api.Assertions.assertThat(responseBody.id()).isEqualTo(ADMIN_ID);
+    }
+
+    @Test
+    public void updateMyPassword_WithValidData_ReturnsAuthenticatedUserWithStatus200() {
+        UserResponseDto responseBody = testClient
+                .patch()
+                .uri(USERS_URI + "/me/password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new PasswordRequestDto(ATTENDANT_PASS, "654321", "654321"))
+                .headers(JwtAuthentication.getHeaderAuthorization(testClient, ATTENDANT_USER, ATTENDANT_PASS))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(UserResponseDto.class)
+                .returnResult().getResponseBody();
+
+        org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
+        org.assertj.core.api.Assertions.assertThat(responseBody.id()).isEqualTo(ATTENDANT_ID);
+        org.assertj.core.api.Assertions.assertThat(responseBody.email()).isEqualTo(ATTENDANT_USER);
+    }
+
+    @Test
+    public void updateMyPassword_WithoutToken_ReturnsStatus401() {
+        testClient
+                .patch()
+                .uri(USERS_URI + "/me/password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new PasswordRequestDto(ATTENDANT_PASS, "654321", "654321"))
+                .exchange()
+                .expectStatus().isUnauthorized();
     }
 
     @Test
@@ -300,6 +378,219 @@ public class UserIT {
                 .returnResult().getResponseBody();
         org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
         org.assertj.core.api.Assertions.assertThat(responseBody.getStatus()).isEqualTo(403);
+    }
+
+    @Test
+    public void updateDoctorPassword_AdminUpdateIsAudited() {
+        testClient
+                .patch()
+                .uri(USERS_URI + "/" + DOCTOR_ID + "/password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new PasswordRequestDto(DOCTOR_PASS, "654321", "654321"))
+                .headers(JwtAuthentication.getHeaderAuthorization(testClient, ADMIN_USER, ADMIN_PASS))
+                .exchange()
+                .expectStatus().isOk();
+
+        testClient
+                .get()
+                .uri(USERS_URI + "/audit/password-resets")
+                .headers(JwtAuthentication.getHeaderAuthorization(testClient, ADMIN_USER, ADMIN_PASS))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.content[0].actorEmailMasked").isEqualTo("s***@g***.com")
+                .jsonPath("$.content[0].targetEmailMasked").isEqualTo("k***@g***.com")
+                .jsonPath("$.totalElements").isEqualTo(1);
+    }
+
+    @Test
+    public void updatePassword_DoctorCannotUpdateOwnPassword_ReturnsStatus403() {
+        testClient
+                .patch()
+                .uri(USERS_URI + "/" + DOCTOR_ID + "/password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new PasswordRequestDto(DOCTOR_PASS, "654321", "654321"))
+                .headers(JwtAuthentication.getHeaderAuthorization(testClient, DOCTOR_USER, DOCTOR_PASS))
+                .exchange()
+                .expectStatus().isForbidden();
+    }
+
+    @Test
+    public void resetDoctorPassword_AdminCanResetWithoutCurrentPassword() {
+        UserResponseDto responseBody = testClient
+                .patch()
+                .uri(USERS_URI + "/" + DOCTOR_ID + "/password/reset")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new PasswordResetRequestDto("654321", "654321"))
+                .headers(JwtAuthentication.getHeaderAuthorization(testClient, ADMIN_USER, ADMIN_PASS))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(UserResponseDto.class)
+                .returnResult().getResponseBody();
+
+        org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
+        org.assertj.core.api.Assertions.assertThat(responseBody.id()).isEqualTo(DOCTOR_ID);
+
+        testClient
+                .get()
+                .uri(USERS_URI + "/audit/password-resets")
+                .headers(JwtAuthentication.getHeaderAuthorization(testClient, ADMIN_USER, ADMIN_PASS))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.content[0].actorEmailMasked").isEqualTo("s***@g***.com")
+                .jsonPath("$.content[0].targetEmailMasked").isEqualTo("k***@g***.com")
+                .jsonPath("$.content[0].createdAt").isNotEmpty()
+                .jsonPath("$.totalElements").isEqualTo(1);
+
+        testClient
+                .get()
+                .uri(USERS_URI + "/audit/password-resets")
+                .headers(JwtAuthentication.getHeaderAuthorization(testClient, ATTENDANT_USER, ATTENDANT_PASS))
+                .exchange()
+                .expectStatus().isForbidden();
+
+        testClient
+                .get()
+                .uri(USERS_URI + "/" + DOCTOR_ID)
+                .headers(JwtAuthentication.getHeaderAuthorization(testClient, DOCTOR_USER, "654321"))
+                .exchange()
+                .expectStatus().isOk();
+    }
+
+    @Test
+    public void resetDoctorPassword_ClientCannotResetPassword() {
+        testClient
+                .patch()
+                .uri(USERS_URI + "/" + DOCTOR_ID + "/password/reset")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new PasswordResetRequestDto("654321", "654321"))
+                .headers(JwtAuthentication.getHeaderAuthorization(testClient, ATTENDANT_USER, ATTENDANT_PASS))
+                .exchange()
+                .expectStatus().isForbidden();
+    }
+
+    @Test
+    public void passwordRecovery_ClientCanResetWithEmailCode() {
+        testClient
+                .post()
+                .uri("/api/v1/auth/password-recovery/request")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new PasswordRecoveryRequestDto(ATTENDANT_USER))
+                .exchange()
+                .expectStatus().isAccepted();
+
+        ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(messageCaptor.capture());
+        Matcher codeMatcher = Pattern.compile("\\b(\\d{6})\\b").matcher(messageCaptor.getValue().getText());
+        org.assertj.core.api.Assertions.assertThat(codeMatcher.find()).isTrue();
+        String recoveryCode = codeMatcher.group(1);
+
+        testClient
+                .post()
+                .uri("/api/v1/auth/password-recovery/confirm")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new PasswordRecoveryConfirmDto(
+                        ATTENDANT_USER,
+                        recoveryCode,
+                        "654321",
+                        "654321"
+                ))
+                .exchange()
+                .expectStatus().isNoContent();
+
+        testClient
+                .get()
+                .uri(USERS_URI + "/" + ATTENDANT_ID)
+                .headers(JwtAuthentication.getHeaderAuthorization(testClient, ATTENDANT_USER, "654321"))
+                .exchange()
+                .expectStatus().isOk();
+    }
+
+    @Test
+    public void passwordRecovery_DoesNotSendCodeToNonClientAccounts() {
+        testClient
+                .post()
+                .uri("/api/v1/auth/password-recovery/request")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new PasswordRecoveryRequestDto(DOCTOR_USER))
+                .exchange()
+                .expectStatus().isAccepted();
+
+        verifyNoInteractions(mailSender);
+    }
+
+    @Test
+    public void adminDashboardSummary_AdminCanAccess() {
+        AdminDashboardSummaryDto responseBody = testClient
+                .get()
+                .uri("/api/v1/admin/dashboard/summary")
+                .headers(JwtAuthentication.getHeaderAuthorization(testClient, ADMIN_USER, ADMIN_PASS))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(AdminDashboardSummaryDto.class)
+                .returnResult().getResponseBody();
+
+        org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
+        org.assertj.core.api.Assertions.assertThat(responseBody.appointmentsToday()).isGreaterThanOrEqualTo(0);
+        org.assertj.core.api.Assertions.assertThat(responseBody.activeDoctors()).isGreaterThanOrEqualTo(0);
+        org.assertj.core.api.Assertions.assertThat(responseBody.registeredPatients()).isEqualTo(1);
+        org.assertj.core.api.Assertions.assertThat(responseBody.dailyAppointments()).hasSize(7);
+    }
+
+    @Test
+    public void adminDashboardSummary_NonAdminCannotAccess() {
+        testClient
+                .get()
+                .uri("/api/v1/admin/dashboard/summary")
+                .headers(JwtAuthentication.getHeaderAuthorization(testClient, ATTENDANT_USER, ATTENDANT_PASS))
+                .exchange()
+                .expectStatus().isForbidden();
+    }
+
+    @Test
+    public void adminDashboardSummary_ReturnsRequestedDateRange() {
+        java.time.LocalDate endDate = java.time.LocalDate.now(java.time.ZoneId.of("America/Sao_Paulo"));
+        java.time.LocalDate startDate = endDate.minusDays(14);
+
+        AdminDashboardSummaryDto responseBody = testClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/v1/admin/dashboard/summary")
+                        .queryParam("startDate", startDate)
+                        .queryParam("endDate", endDate)
+                        .build())
+                .headers(JwtAuthentication.getHeaderAuthorization(testClient, ADMIN_USER, ADMIN_PASS))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(AdminDashboardSummaryDto.class)
+                .returnResult().getResponseBody();
+
+        org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
+        org.assertj.core.api.Assertions.assertThat(responseBody.dailyAppointments()).hasSize(15);
+    }
+
+    @Test
+    public void getAllDoctors_AdminCanAccess() {
+        testClient
+                .get()
+                .uri("/api/v1/doctors")
+                .headers(JwtAuthentication.getHeaderAuthorization(testClient, ADMIN_USER, ADMIN_PASS))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.content").isArray()
+                .jsonPath("$.totalElements").isNumber();
+    }
+
+    @Test
+    public void getAllDoctors_NonAdminCannotAccess() {
+        testClient
+                .get()
+                .uri("/api/v1/doctors")
+                .headers(JwtAuthentication.getHeaderAuthorization(testClient, ATTENDANT_USER, ATTENDANT_PASS))
+                .exchange()
+                .expectStatus().isForbidden();
     }
 
 }

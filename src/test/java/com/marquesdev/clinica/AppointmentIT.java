@@ -3,6 +3,7 @@ package com.marquesdev.clinica;
 import com.marquesdev.clinica.dto.AppointmentRequestDto;
 import com.marquesdev.clinica.dto.AppointmentResponseDto;
 import com.marquesdev.clinica.dto.AppointmentUpdateRequestDto;
+import com.marquesdev.clinica.dto.AppointmentAvailabilityResponseDto;
 import com.marquesdev.clinica.enums.AppointmentStatus;
 import com.marquesdev.clinica.enums.PaymentMethod;
 import com.marquesdev.clinica.enums.PaymentStatus;
@@ -14,6 +15,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -29,6 +32,9 @@ public class AppointmentIT {
 
     @Autowired
     private WebTestClient testClient;
+
+    @MockitoBean
+    private JavaMailSender mailSender;
 
     private static final String APPOINTMENTS_URI = "/api/v1/appointments";
 
@@ -67,6 +73,26 @@ public class AppointmentIT {
     }
 
     @Test
+    public void createAppointment_WithConflictingTime_ReturnsStatus409() {
+        testClient
+                .post()
+                .uri(APPOINTMENTS_URI)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new AppointmentRequestDto(
+                        Specialty.CARDIOLOGY,
+                        LocalDateTime.of(2026, 12, 1, 10, 0),
+                        PaymentMethod.CASH,
+                        "Consulta de rotina"
+                ))
+                .headers(JwtAuthentication.getHeaderAuthorization(
+                        testClient, USER_WITHOUT_APPOINTMENT_EMAIL, USER_WITHOUT_APPOINTMENT_PASS))
+                .exchange()
+                .expectStatus().isEqualTo(409)
+                .expectBody(ErrorMessage.class)
+                .value(error -> org.assertj.core.api.Assertions.assertThat(error.getStatus()).isEqualTo(409));
+    }
+
+    @Test
     public void createAppointment_WithPastDate_ReturnsStatus400() {
         ErrorMessage responseBody = testClient
                 .post()
@@ -101,6 +127,102 @@ public class AppointmentIT {
                 ))
                 .exchange()
                 .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    public void getAvailableSlots_UsesSpecialtyDurationAndExcludesConflicts() {
+        AppointmentAvailabilityResponseDto responseBody = testClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(APPOINTMENTS_URI + "/available-slots")
+                        .queryParam("specialty", "CARDIOLOGY")
+                        .queryParam("date", "2026-12-01")
+                        .build())
+                .headers(JwtAuthentication.getHeaderAuthorization(
+                        testClient, USER_WITHOUT_APPOINTMENT_EMAIL, USER_WITHOUT_APPOINTMENT_PASS))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(AppointmentAvailabilityResponseDto.class)
+                .returnResult().getResponseBody();
+
+        org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
+        org.assertj.core.api.Assertions.assertThat(responseBody.durationMinutes()).isEqualTo(30);
+        org.assertj.core.api.Assertions.assertThat(responseBody.consultationFee())
+                .isEqualByComparingTo("250.00");
+        org.assertj.core.api.Assertions.assertThat(responseBody.availableSlots())
+                .contains("09:30", "10:30", "11:30", "13:00")
+                .doesNotContain("10:00", "12:00", "12:30", "18:00");
+    }
+
+    @Test
+    public void getAvailableSlots_ReturnsNoSlotsOnWeekends() {
+        AppointmentAvailabilityResponseDto responseBody = testClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(APPOINTMENTS_URI + "/available-slots")
+                        .queryParam("specialty", "CARDIOLOGY")
+                        .queryParam("date", "2026-12-05")
+                        .build())
+                .headers(JwtAuthentication.getHeaderAuthorization(
+                        testClient, USER_WITHOUT_APPOINTMENT_EMAIL, USER_WITHOUT_APPOINTMENT_PASS))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(AppointmentAvailabilityResponseDto.class)
+                .returnResult().getResponseBody();
+
+        org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
+        org.assertj.core.api.Assertions.assertThat(responseBody.availableSlots()).isEmpty();
+    }
+
+    @Test
+    public void getAvailableSlots_RequiresPatientAccess() {
+        testClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(APPOINTMENTS_URI + "/available-slots")
+                        .queryParam("specialty", "CARDIOLOGY")
+                        .queryParam("date", "2026-12-01")
+                        .build())
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    public void getRescheduleSlots_ExcludesCurrentAppointmentFromConflicts() {
+        UUID appointmentId = UUID.fromString("d4e5f6a7-b8c9-0123-def0-456789012345");
+        AppointmentAvailabilityResponseDto responseBody = testClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(APPOINTMENTS_URI + "/" + appointmentId + "/available-slots")
+                        .queryParam("date", "2026-12-01")
+                        .build())
+                .headers(JwtAuthentication.getHeaderAuthorization(
+                        testClient, USER_WITH_APPOINTMENT_EMAIL, USER_WITH_APPOINTMENT_PASS))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(AppointmentAvailabilityResponseDto.class)
+                .returnResult().getResponseBody();
+
+        org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
+        org.assertj.core.api.Assertions.assertThat(responseBody.durationMinutes()).isEqualTo(30);
+        org.assertj.core.api.Assertions.assertThat(responseBody.consultationFee())
+                .isEqualByComparingTo("250.00");
+        org.assertj.core.api.Assertions.assertThat(responseBody.availableSlots()).contains("10:00");
+    }
+
+    @Test
+    public void getRescheduleSlots_CannotAccessAnotherUsersAppointment() {
+        UUID appointmentId = UUID.fromString("d4e5f6a7-b8c9-0123-def0-456789012345");
+        testClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(APPOINTMENTS_URI + "/" + appointmentId + "/available-slots")
+                        .queryParam("date", "2026-12-01")
+                        .build())
+                .headers(JwtAuthentication.getHeaderAuthorization(
+                        testClient, USER_WITHOUT_APPOINTMENT_EMAIL, USER_WITHOUT_APPOINTMENT_PASS))
+                .exchange()
+                .expectStatus().isNotFound();
     }
 
     // ===========================================
@@ -194,6 +316,59 @@ public class AppointmentIT {
         org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
         org.assertj.core.api.Assertions.assertThat(responseBody.id()).isNotNull();
         org.assertj.core.api.Assertions.assertThat(responseBody.reason()).isEqualTo("Consulta atualizada");
+    }
+
+    @Test
+    public void updateAppointment_WithConflictingTime_ReturnsStatus409() {
+        UUID appointmentId = UUID.fromString("d4e5f6a7-b8c9-0123-def0-456789012345");
+        testClient
+                .post()
+                .uri(APPOINTMENTS_URI)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new AppointmentRequestDto(
+                        Specialty.CARDIOLOGY,
+                        LocalDateTime.of(2026, 12, 1, 11, 0),
+                        PaymentMethod.CASH,
+                        "Outra consulta"
+                ))
+                .headers(JwtAuthentication.getHeaderAuthorization(
+                        testClient, USER_WITHOUT_APPOINTMENT_EMAIL, USER_WITHOUT_APPOINTMENT_PASS))
+                .exchange()
+                .expectStatus().isCreated();
+
+        testClient
+                .put()
+                .uri(APPOINTMENTS_URI + "/" + appointmentId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new AppointmentUpdateRequestDto(
+                        LocalDateTime.of(2026, 12, 1, 11, 0),
+                        AppointmentStatus.SCHEDULED,
+                        "Horário em conflito"
+                ))
+                .headers(JwtAuthentication.getHeaderAuthorization(
+                        testClient, USER_WITH_APPOINTMENT_EMAIL, USER_WITH_APPOINTMENT_PASS))
+                .exchange()
+                .expectStatus().isEqualTo(409)
+                .expectBody(ErrorMessage.class)
+                .value(error -> org.assertj.core.api.Assertions.assertThat(error.getStatus()).isEqualTo(409));
+    }
+
+    @Test
+    public void updateAppointment_OutsideClinicHours_ReturnsStatus409() {
+        UUID appointmentId = UUID.fromString("d4e5f6a7-b8c9-0123-def0-456789012345");
+        testClient
+                .put()
+                .uri(APPOINTMENTS_URI + "/" + appointmentId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new AppointmentUpdateRequestDto(
+                        LocalDateTime.of(2026, 12, 1, 12, 0),
+                        AppointmentStatus.SCHEDULED,
+                        "Horário de almoço"
+                ))
+                .headers(JwtAuthentication.getHeaderAuthorization(
+                        testClient, USER_WITH_APPOINTMENT_EMAIL, USER_WITH_APPOINTMENT_PASS))
+                .exchange()
+                .expectStatus().isEqualTo(409);
     }
 
     @Test

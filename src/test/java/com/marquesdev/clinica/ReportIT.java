@@ -7,11 +7,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureWebTestClient
+@AutoConfigureWebTestClient(timeout = "30s")
 @Sql(scripts = "/sql/reports/report-insert.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "/sql/reports/report-delete.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 public class ReportIT {
@@ -27,6 +29,9 @@ public class ReportIT {
 
     @Autowired
     private WebTestClient testClient;
+
+    @MockitoBean
+    private JavaMailSender mailSender;
 
     @Test
     public void downloadMyAppointments_WithClientToken_ReturnsPdfWithStatus200() {
