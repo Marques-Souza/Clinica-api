@@ -3,7 +3,9 @@ package com.marquesdev.clinica.controller;
 import com.marquesdev.clinica.dto.AppointmentRequestDto;
 import com.marquesdev.clinica.dto.AppointmentResponseDto;
 import com.marquesdev.clinica.dto.AppointmentUpdateRequestDto;
+import com.marquesdev.clinica.dto.AppointmentAvailabilityResponseDto;
 import com.marquesdev.clinica.exception.ErrorMessage;
+import com.marquesdev.clinica.enums.Specialty;
 import com.marquesdev.clinica.service.AppointmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -17,12 +19,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Tag(name = "Appointments", description = "Contains all operations related to appointment management for creating, updating, listing and retrieving.")
@@ -39,7 +43,7 @@ public class AppointmentController {
             responses = {
                     @ApiResponse(responseCode = "201", description = "Appointment created successfully",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = AppointmentResponseDto.class))),
-                    @ApiResponse(responseCode = "400", description = "Schedule conflict - no doctor available for the selected time",
+                    @ApiResponse(responseCode = "409", description = "Schedule conflict - no doctor available for the selected time",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
                     @ApiResponse(responseCode = "401", description = "Unauthorized",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
@@ -58,6 +62,44 @@ public class AppointmentController {
                 authentication.getName(),
                 appointmentRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(appointment);
+    }
+
+    @Operation(summary = "Retrieve available appointment times",
+            description = "Returns the configured consultation fee, duration, and free weekday slots from 08:00 to 12:00 and 13:00 to 18:00.",
+            security = @SecurityRequirement(name = "security"),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Available slots retrieved"),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                    @ApiResponse(responseCode = "403", description = "Forbidden"),
+                    @ApiResponse(responseCode = "404", description = "Specialty configuration not found")
+            })
+    @GetMapping("/available-slots")
+    @PreAuthorize("hasAuthority('USER')")
+    public ResponseEntity<AppointmentAvailabilityResponseDto> getAvailableSlots(
+            @RequestParam Specialty specialty,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        return ResponseEntity.ok(appointmentService.getAvailableSlots(specialty, date));
+    }
+
+    @Operation(summary = "Retrieve available slots for rescheduling",
+            description = "Returns the appointment's fee and duration, plus free slots for its assigned doctor, excluding the appointment being rescheduled.",
+            security = @SecurityRequirement(name = "security"),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Available slots retrieved"),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                    @ApiResponse(responseCode = "403", description = "Forbidden"),
+                    @ApiResponse(responseCode = "404", description = "Appointment not found")
+            })
+    @GetMapping("/{id}/available-slots")
+    @PreAuthorize("hasAuthority('USER')")
+    public ResponseEntity<AppointmentAvailabilityResponseDto> getRescheduleSlots(
+            @PathVariable UUID id,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(appointmentService.getRescheduleSlots(
+                authentication.getName(), id, date));
     }
 
     @Operation(summary = "Retrieve all appointments for authenticated user",
@@ -113,6 +155,8 @@ public class AppointmentController {
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
                     @ApiResponse(responseCode = "404", description = "Appointment not found",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
+                    @ApiResponse(responseCode = "409", description = "Schedule conflict or appointment cannot be rescheduled",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
                     @ApiResponse(responseCode = "422", description = "Invalid fields",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class)))
             }
@@ -129,5 +173,14 @@ public class AppointmentController {
                 appointmentUpdateRequestDto
         );
         return ResponseEntity.ok(appointment);
+    }
+
+    @GetMapping("/doctor/me")
+    @PreAuthorize("hasAuthority('DOCTOR')")
+    public ResponseEntity<Page<AppointmentResponseDto>> findAllForDoctor(
+            @PageableDefault(page = 0, size = 10) Pageable pageable,
+            Authentication authentication){
+        Page<AppointmentResponseDto> appointments = appointmentService.findAllForDoctor(authentication.getName(), pageable);
+        return ResponseEntity.ok(appointments);
     }
 }
