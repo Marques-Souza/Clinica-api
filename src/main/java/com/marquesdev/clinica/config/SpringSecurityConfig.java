@@ -24,6 +24,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @EnableWebSecurity
@@ -34,8 +35,14 @@ public class SpringSecurityConfig {
     @Value("${app.jwt.secret}")
     private String jwtSecret;
 
+    @Value("${app.cors.allowed-origins}")
+    private String corsAllowedOrigins;
+
     @PostConstruct
     public void initJwtSecret() {
+        if (jwtSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("JWT_SECRET must contain at least 32 bytes");
+        }
         JwtUtils.setJwtSecret(jwtSecret);
     }
 
@@ -93,7 +100,14 @@ public class SpringSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        List<String> allowedOrigins = Arrays.stream(corsAllowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList();
+        if (allowedOrigins.isEmpty() || allowedOrigins.contains("*")) {
+            throw new IllegalStateException("CORS_ALLOWED_ORIGINS must list explicit origins");
+        }
+        config.setAllowedOrigins(allowedOrigins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 
