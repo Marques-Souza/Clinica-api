@@ -4,6 +4,9 @@ spring:
     show-sql: false
     hibernate:
       ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   h2:
     console:
