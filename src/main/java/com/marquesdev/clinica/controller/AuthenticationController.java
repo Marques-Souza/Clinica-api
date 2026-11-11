@@ -1,12 +1,16 @@
 package com.marquesdev.clinica.controller;
 
 import com.marquesdev.clinica.dto.UserLoginDto;
+import com.marquesdev.clinica.dto.PasswordRecoveryConfirmDto;
+import com.marquesdev.clinica.dto.PasswordRecoveryRequestDto;
 import com.marquesdev.clinica.entity.User;
 import com.marquesdev.clinica.enums.Perfil;
 import com.marquesdev.clinica.exception.ErrorMessage;
+import com.marquesdev.clinica.exception.PasswordInvalidException;
 import com.marquesdev.clinica.jwt.JwtToken;
 import com.marquesdev.clinica.jwt.JwtUserDetailsService;
 import com.marquesdev.clinica.repository.DoctorRepository;
+import com.marquesdev.clinica.service.PasswordRecoveryService;
 import com.marquesdev.clinica.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -38,6 +42,7 @@ public class AuthenticationController {
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
     private final DoctorRepository doctorRepository;
+    private final PasswordRecoveryService passwordRecoveryService;
 
     @Operation(summary = "Authenticate user",
             description = "Authenticate a user with email and password and return a JWT token",
@@ -85,5 +90,28 @@ public class AuthenticationController {
                             "Invalid credentials"
                     ));
         }
+    }
+
+    @Operation(summary = "Request a client password recovery code",
+            description = "Sends a short-lived recovery code when the email belongs to a client account.")
+    @PostMapping("/auth/password-recovery/request")
+    public ResponseEntity<Void> requestPasswordRecovery(
+            @RequestBody @Valid PasswordRecoveryRequestDto requestDto
+    ) {
+        passwordRecoveryService.requestCode(requestDto.email());
+        return ResponseEntity.accepted().build();
+    }
+
+    @Operation(summary = "Confirm a client password recovery code",
+            description = "Sets a new password for a client account using a valid email recovery code.")
+    @PostMapping("/auth/password-recovery/confirm")
+    public ResponseEntity<Void> confirmPasswordRecovery(
+            @RequestBody @Valid PasswordRecoveryConfirmDto confirmDto
+    ) {
+        boolean updated = passwordRecoveryService.confirmCode(confirmDto);
+        if (!updated) {
+            throw new PasswordInvalidException("Recovery code is invalid or expired.");
+        }
+        return ResponseEntity.noContent().build();
     }
 }

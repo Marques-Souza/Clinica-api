@@ -84,6 +84,19 @@ public class ApiExceptionHandler {
 
     }
 
+    @ExceptionHandler(PasswordRecoveryDeliveryException.class)
+    public ResponseEntity<ErrorMessage> passwordRecoveryDeliveryException(
+            PasswordRecoveryDeliveryException ex,
+            HttpServletRequest request
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new ErrorMessage(request, HttpStatus.SERVICE_UNAVAILABLE,
+                        "Password recovery is temporarily unavailable."));
+    }
+
+
     @ExceptionHandler({DoctorAlreadyExistsException.class, ClientAlreadyExistsException.class, SpecialtyConfigAlreadyExistsException.class, DoctorInactiveException.class, ScheduleConflictException.class })
     public ResponseEntity<ErrorMessage> profileAlreadyExistsException(RuntimeException ex,
                                                                      HttpServletRequest request){
