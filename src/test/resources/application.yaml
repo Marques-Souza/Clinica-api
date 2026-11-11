@@ -20,3 +20,5 @@ app:
       dashboard: /api/v1/admin/dashboard
   jwt:
     secret: 0123456789-0123456789-0123456789-0123456789
+  cors:
+    allowed-origins: http://localhost:5173
