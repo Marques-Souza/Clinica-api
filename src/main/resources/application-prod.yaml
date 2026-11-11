@@ -8,3 +8,12 @@ spring:
   h2:
     console:
       enabled: false
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+  initial-admin:
+    email: ${INITIAL_ADMIN_EMAIL}
+    password: ${INITIAL_ADMIN_PASSWORD}
