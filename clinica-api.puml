@@ -1,0 +1,473 @@
+@startuml Clinica API - Diagrama de Classes
+
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam packageStyle rectangle
+
+title API Clínica Médica - Diagrama de Classes
+
+' =============================================
+' ENUMS
+' =============================================
+package enums {
+  enum Specialty {
+    -- Atributos --
+    + CARDIOLOGIA
+    + DERMATOLOGIA
+    + ENDOCRINOLOGIA
+    + GINECOLOGIA
+    + NEUROLOGIA
+    + ORTOPEDIA
+    + PEDIATRIA
+    + PSIQUIATRIA
+    + CLINICO_GERAL
+  }
+
+  enum AppointmentStatus {
+    -- Atributos --
+    + AGENDADA
+    + CONFIRMADA
+    + CANCELADA
+    + REALIZADA
+    + NO_SHOW
+  }
+
+  enum PaymentMethod {
+    -- Atributos --
+    + DINHEIRO
+    + PIX
+    + CARTAO_CREDITO
+    + CARTAO_DEBITO
+    + VALE_SAUDE
+  }
+
+  enum PaymentStatus {
+    -- Atributos --
+    + PENDENTE
+    + PAGO
+    + CANCELADO
+  }
+
+  enum Perfil {
+    -- Atributos --
+    + USER
+    + DOCTOR
+    + ADMIN
+  }
+}
+
+' =============================================
+' ENTIDADES
+' =============================================
+package entity {
+  class User {
+    -- Atributos --
+    - id: UUID
+    - email: String
+    - password: String
+    - perfil: Perfil
+    - createdAt: LocalDateTime
+    - modifiedAt: LocalDateTime
+    - createdBy: String
+    - modifiedBy: String
+    -- Métodos --
+    + setEmail(String)
+    + setPassword(String)
+    + setPerfil(Perfil)
+  }
+
+  class Client {
+    -- Atributos --
+    - id: UUID
+    - fullName: String
+    - cpf: String
+    - phone: String
+    - cep: String
+    - street: String
+    - neighborhood: String
+    - city: String
+    - state: String
+    - number: String
+    - user: User
+    -- Métodos --
+    + setFullName(String)
+    + setCpf(String)
+    + setPhone(String)
+    + assignUser(User)
+  }
+
+  class Doctor {
+    -- Atributos --
+    - id: UUID
+    - fullName: String
+    - cpf: String
+    - crm: String
+    - specialty: Specialty
+    - active: Boolean
+    - user: User
+    - createdAt: LocalDateTime
+    - modifiedAt: LocalDateTime
+    -- Métodos --
+    + setFullName(String)
+    + setCpf(String)
+    + setCrm(String)
+    + setSpecialty(Specialty)
+    + setActive(Boolean)
+    + assignUser(User)
+  }
+
+  class Appointment {
+    -- Atributos --
+    - id: UUID
+    - patient: Client
+    - doctor: Doctor
+    - scheduledAt: LocalDateTime
+    - consultationFee: BigDecimal
+    - paymentMethod: PaymentMethod
+    - paymentStatus: PaymentStatus
+    - status: AppointmentStatus
+    - reason: String
+    - durationMinutes: Integer
+    - appointmentCode: String
+    -- Métodos --
+    + assignPatient(Client)
+    + assignDoctor(Doctor)
+    + setStatus(AppointmentStatus)
+  }
+
+  class SpecialtyConfig {
+    -- Atributos --
+    - id: UUID
+    - specialty: Specialty
+    - consultationFee: BigDecimal
+    - durationMinutes: Integer
+    -- Métodos --
+    + setSpecialty(Specialty)
+    + setConsultationFee(BigDecimal)
+    + setDurationMinutes(Integer)
+  }
+}
+
+' =============================================
+' SERVIÇOS
+' =============================================
+package service {
+  class UserService {
+    -- Métodos --
+    + createUser(UserRequestDto): UserResponseDto
+    + updateUser(UUID, UserUpdateRequestDto): UserResponseDto
+    + updateUserPassword(UUID, PasswordRequestDto): UserResponseDto
+    + getAllUsers(Pageable): Page<UserResponseDto>
+    + getUserById(UUID): UserResponseDto
+    + deleteUser(UUID)
+  }
+
+  class ClientService {
+    -- Métodos --
+    + createClient(ClientRequestDto): ClientResponseDto
+    + updateClient(UUID, ClientUpdateRequestDto): ClientResponseDto
+    + getAllClients(Pageable): Page<ClientResponseDto>
+    + getClientById(UUID): ClientResponseDto
+    + deleteClient(UUID)
+  }
+
+  class DoctorService {
+    -- Métodos --
+    + createDoctor(DoctorRequestDto): DoctorResponseDto
+    + updateDoctor(UUID, DoctorUpdateRequestDto): DoctorResponseDto
+    + getAllDoctors(Pageable): Page<DoctorResponseDto>
+    + getDoctorById(UUID): DoctorResponseDto
+    + deleteDoctor(UUID)
+  }
+
+  class AppointmentService {
+    -- Métodos --
+    + createAppointment(AppointmentRequestDto): AppointmentResponseDto
+    + updateAppointment(UUID, AppointmentUpdateRequestDto): AppointmentResponseDto
+    + getAllAppointments(Pageable): Page<AppointmentResponseDto>
+    + getAppointmentById(UUID): AppointmentResponseDto
+    + deleteAppointment(UUID)
+    + findAvailableDoctor(Specialty, LocalDateTime): Doctor
+  }
+
+  class SpecialtyConfigService {
+    -- Métodos --
+    + createSpecialtyConfig(SpecialtyConfigRequestDto): SpecialtyConfigResponseDto
+    + updateSpecialtyConfig(UUID, SpecialtyConfigUpdateRequestDto): SpecialtyConfigResponseDto
+    + getAllSpecialtyConfigs(): List<SpecialtyConfigResponseDto>
+    + getSpecialtyConfigById(UUID): SpecialtyConfigResponseDto
+    + getSpecialtyConfigBySpecialty(Specialty): SpecialtyConfigResponseDto
+    + deleteSpecialtyConfig(UUID)
+  }
+
+  class ReportService {
+    -- Métodos --
+    + generateClientReport(UUID): byte[]
+    + generateAdminReport(): byte[]
+    + generateDoctorReport(UUID): byte[]
+  }
+}
+
+' =============================================
+' CONTROLLERS
+' =============================================
+package controller {
+  class UserController {
+    -- Endpoints --
+    + POST /api/v1/users
+    + GET /api/v1/users
+    + GET /api/v1/users/{id}
+    + PUT /api/v1/users/{id}
+    + PUT /api/v1/users/{id}/password
+    + DELETE /api/v1/users/{id}
+  }
+
+  class ClientController {
+    -- Endpoints --
+    + POST /api/v1/clients
+    + GET /api/v1/clients
+    + GET /api/v1/clients/{id}
+    + PUT /api/v1/clients/{id}
+    + DELETE /api/v1/clients/{id}
+  }
+
+  class DoctorController {
+    -- Endpoints --
+    + POST /api/v1/doctors
+    + GET /api/v1/doctors
+    + GET /api/v1/doctors/{id}
+    + PUT /api/v1/doctors/{id}
+    + DELETE /api/v1/doctors/{id}
+  }
+
+  class AppointmentController {
+    -- Endpoints --
+    + POST /api/v1/appointments
+    + GET /api/v1/appointments
+    + GET /api/v1/appointments/{id}
+    + PUT /api/v1/appointments/{id}
+    + DELETE /api/v1/appointments/{id}
+  }
+
+  class SpecialtyConfigController {
+    -- Endpoints --
+    + POST /api/v1/specialties
+    + GET /api/v1/specialties
+    + GET /api/v1/specialties/{id}
+    + PUT /api/v1/specialties/{id}
+    + DELETE /api/v1/specialties/{id}
+  }
+
+  class AuthenticationController {
+    -- Endpoints --
+    + POST /api/v1/auth/login
+  }
+
+  class ReportController {
+    -- Endpoints --
+    + GET /api/v1/reports/client/{id}
+    + GET /api/v1/reports/admin
+    + GET /api/v1/reports/doctor/{id}
+  }
+}
+
+' =============================================
+' REPOSITÓRIOS
+' =============================================
+package repository {
+  interface UserRepository {
+    # extends JpaRepository<User, UUID>
+  }
+  interface ClientRepository {
+    # extends JpaRepository<Client, UUID>
+  }
+  interface DoctorRepository {
+    # extends JpaRepository<Doctor, UUID>
+  }
+  interface AppointmentRepository {
+    # extends JpaRepository<Appointment, UUID>
+  }
+  interface SpecialtyConfigRepository {
+    # extends JpaRepository<SpecialtyConfig, UUID>
+  }
+}
+
+' =============================================
+' MAPPERS
+' =============================================
+package mapper {
+  interface UserMapper {
+    + toResponse(User): UserResponseDto
+    + toEntity(UserRequestDto): User
+  }
+  interface ClientMapper {
+    + toResponse(Client): ClientResponseDto
+    + toEntity(ClientRequestDto): Client
+  }
+  interface DoctorMapper {
+    + toResponse(Doctor): DoctorResponseDto
+    + toEntity(DoctorRequestDto): Doctor
+  }
+  interface AppointmentMapper {
+    + toResponse(Appointment): AppointmentResponseDto
+    + toEntity(AppointmentRequestDto): Appointment
+  }
+  interface SpecialtyConfigMapper {
+    + toResponse(SpecialtyConfig): SpecialtyConfigResponseDto
+    + toEntity(SpecialtyConfigRequestDto): SpecialtyConfig
+  }
+}
+
+' =============================================
+' SEGURANÇA JWT
+' =============================================
+package jwt {
+  class JwtUtils {
+    -- Métodos --
+    + generateToken(User): String
+    + getSubject(String): String
+    + getExpiration(String): Date
+    + validateToken(String): Boolean
+  }
+
+  class JwtAuthorizationFilter {
+    -- Métodos --
+    + doFilterInternal(HttpServletRequest, HttpServletResponse, FilterChain)
+  }
+
+  class JwtUserDetailsService {
+    -- Métodos --
+    + loadUserByUsername(String): UserDetails
+  }
+
+  class JwtAuthenticationEntryPoint {
+    -- Métodos --
+    + commence(HttpServletRequest, HttpServletResponse, AuthenticationException)
+  }
+}
+
+package security {
+  class UserAuthorization {
+    -- Métodos --
+    + canUpdatePassword(String, String, Perfil): Boolean
+  }
+}
+
+' =============================================
+' INTEGRAÇÕES
+' =============================================
+package integration {
+  class ViaCepService {
+    -- Métodos --
+    + findAddressByCep(String): ViaCepResponseDto
+  }
+  class ViaCepResponseDto {
+    - cep: String
+    - logradouro: String
+    - bairro: String
+    - localidade: String
+    - uf: String
+  }
+}
+
+' =============================================
+' EXCEÇÕES
+' =============================================
+package exception {
+  class ApiExceptionHandler {
+    -- Métodos --
+    + handleEntityNotFoundException()
+    + handleScheduleConflictException()
+    + handleDoctorInactiveException()
+    + handleEmailAlreadyExistsException()
+    + handleClientAlreadyExistsException()
+    + handleDoctorAlreadyExistsException()
+    + handleSpecialtyConfigAlreadyExistsException()
+  }
+
+  class EntityNotFoundException {
+  }
+  class ScheduleConflictException {
+  }
+  class DoctorInactiveException {
+  }
+  class EmailAlreadyExistsException {
+  }
+  class ClientAlreadyExistsException {
+  }
+  class DoctorAlreadyExistsException {
+  }
+  class SpecialtyConfigAlreadyExistsException {
+  }
+  class PasswordInvalidException {
+  }
+}
+
+' =============================================
+' RELACIONAMENTOS
+' =============================================
+
+' Entidades
+  Client "1" --> "1" User : user_id (OneToOne)
+  Doctor "1" --> "1" User : user_id (OneToOne)
+  Appointment "N" --> "1" Client : patient_id (ManyToOne)
+  Appointment "N" --> "1" Doctor : doctor_id (ManyToOne)
+
+' Enums
+  User --> Perfil : @Enumerated
+  Doctor --> Specialty : @Enumerated
+  Appointment --> AppointmentStatus : @Enumerated
+  Appointment --> PaymentMethod : @Enumerated
+  Appointment --> PaymentStatus : @Enumerated
+  SpecialtyConfig --> Specialty : @Enumerated
+
+' Controllers -> Services
+  UserController ..> UserService : usa
+  ClientController ..> ClientService : usa
+  DoctorController ..> DoctorService : usa
+  AppointmentController ..> AppointmentService : usa
+  SpecialtyConfigController ..> SpecialtyConfigService : usa
+  ReportController ..> ReportService : usa
+
+' Services -> Repositories
+  UserService ..> UserRepository : usa
+  ClientService ..> ClientRepository : usa
+  DoctorService ..> DoctorRepository : usa
+  AppointmentService ..> AppointmentRepository : usa
+  SpecialtyConfigService ..> SpecialtyConfigRepository : usa
+
+' Services -> Mappers
+  UserService ..> UserMapper : mapeia
+  ClientService ..> ClientMapper : mapeia
+  DoctorService ..> DoctorMapper : mapeia
+  AppointmentService ..> AppointmentMapper : mapeia
+  SpecialtyConfigService ..> SpecialtyConfigMapper : mapeia
+
+' Services -> Integrations
+  ClientService ..> ViaCepService : busca CEP
+
+' Services -> Security
+  UserService ..> UserAuthorization : valida senha
+
+' Security -> JWT
+  JwtAuthorizationFilter ..> JwtUtils : valida token
+  JwtUserDetailsService ..> UserRepository : carrega usuario
+
+' ReportService -> Entities
+  ReportService ..> Client : gera PDF
+  ReportService ..> Doctor : gera PDF
+  ReportService ..> Appointment : gera PDF
+
+' JWT -> User
+  JwtUtils ..> User : gera token
+
+legend right
+  |<b>Lenda</b>|
+  |——| Composição / Associação|
+  |..>| Dependência (usa)|
+  |"1" "N"| Cardinalidade|
+  |@Enumerated| Enum armazenado como String|
+endlegend
+
+@enduml
