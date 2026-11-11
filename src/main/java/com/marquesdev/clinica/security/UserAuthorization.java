@@ -26,7 +26,7 @@ public class UserAuthorization {
         }
 
         if (authenticatedPerfil == Perfil.DOCTOR){
-            return authenticatedUserId.equals(id);
+            return false;
         }
 
         if (authenticatedPerfil == Perfil.ADMIN){
@@ -40,5 +40,16 @@ public class UserAuthorization {
                     .orElse(true);
         }
         return  false;
+    }
+
+    public boolean canResetDoctorPassword(UUID id, Authentication authentication) {
+        JwtUserDetails principal = (JwtUserDetails) authentication.getPrincipal();
+        if (principal.getPerfil() != Perfil.ADMIN) {
+            return false;
+        }
+
+        return userRepository.findById(id)
+                .map(user -> user.getPerfil() == Perfil.DOCTOR)
+                .orElse(false);
     }
 }

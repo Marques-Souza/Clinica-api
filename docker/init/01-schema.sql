@@ -63,3 +63,13 @@ CREATE TABLE IF NOT EXISTS appointments (
     CONSTRAINT fk_appointments_patient FOREIGN KEY (patient_id) REFERENCES clients (id),
     CONSTRAINT fk_appointments_doctor FOREIGN KEY (doctor_id) REFERENCES doctors (id)
 );
+
+CREATE TABLE IF NOT EXISTS admin_password_reset_audits (
+    id UUID PRIMARY KEY,
+    actor_user_id UUID NOT NULL,
+    target_user_id UUID NOT NULL,
+    created_at TIMESTAMP NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_password_reset_audits_created_at
+    ON admin_password_reset_audits (created_at DESC);
