@@ -13,6 +13,8 @@ import jakarta.validation.Valid;
 
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +51,11 @@ public class DoctorService {
         Doctor doctor = doctorRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Doctor not found"));
         return doctorMapper.toDto(doctor);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<DoctorResponseDto> getAllDoctors(Pageable pageable) {
+        return doctorRepository.findAll(pageable).map(doctorMapper::toDto);
     }
 
     @Transactional

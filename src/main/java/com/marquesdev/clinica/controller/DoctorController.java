@@ -13,6 +13,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,6 +31,16 @@ import java.util.UUID;
 public class DoctorController {
 
     private final DoctorService doctorService;
+
+    @Operation(summary = "List doctors for administration",
+            description = "Returns a paginated list of doctor profiles. Only admins can access.")
+    @GetMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Page<DoctorResponseDto>> getAllDoctors(
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        return ResponseEntity.ok(doctorService.getAllDoctors(pageable));
+    }
 
     @Operation(summary = "Create doctor profile",
             description = "Create a doctor profile for the authenticated user. Only users with DOCTOR role can create their profile. (Bearer Token required)",
